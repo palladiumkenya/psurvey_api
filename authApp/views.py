@@ -12,10 +12,24 @@ from .models import *
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def facilities(request):
     if request.method == "GET":
         queryset = Facility.objects.all()
         serializer = FacilitySerializer(queryset, many=True)
         return Response(data={"data": serializer.data}, status=status.HTTP_200_OK)
 
+
+@api_view(['GET'])
+def designation(request):
+    if request.method == "GET":
+        queryset = Designation.objects.all()
+        serializer = DesignationSerializer(queryset, many=True)
+        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def current_user(request):
+    if request.method == "GET":
+        queryset = Users.objects.get(id=request.user.id)
+        serializer = UserSerializer(queryset)
+        return Response(serializer.data, status=status.HTTP_200_OK)
