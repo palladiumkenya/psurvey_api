@@ -12,7 +12,6 @@ from .models import *
 
 
 @api_view(['GET'])
-@permission_classes([IsAuthenticated])
 def facilities(request):
     if request.method == "GET":
         queryset = Facility.objects.all()
