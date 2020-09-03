@@ -1,16 +1,12 @@
-import requests
-
-from django.contrib.auth.hashers import make_password
-from django.contrib.auth.password_validation import validate_password
 from .models import *
 from djoser.serializers import UserSerializer, UserCreateSerializer
 from rest_framework import serializers
 
 
-class UserCreateSerializer(UserCreateSerializer):
-    class Meta(UserCreateSerializer.Meta):
-        model = Users
-        fields = ['id', 'msisdn', 'password', 'designation', 'facility', 'email', 'f_name', 'l_name']
+class DesignationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Designation
+        fields = '__all__'
 
 
 class FacilitySerializer(serializers.ModelSerializer):
@@ -18,3 +14,16 @@ class FacilitySerializer(serializers.ModelSerializer):
         model = Facility
         fields = '__all__'
 
+
+class UserSerializer(UserSerializer):
+    designation = DesignationSerializer(read_only=True)
+    facility = FacilitySerializer(read_only=True)
+    class Meta:
+        model=Users
+        fields = ['id', 'msisdn', 'designation', 'facility', 'email', 'f_name', 'l_name']
+
+
+class UserCreateSerializer(UserCreateSerializer):
+    class Meta(UserCreateSerializer.Meta):
+        model = Users
+        fields = ['id', 'msisdn', 'password', 'designation', 'facility', 'email', 'f_name', 'l_name']
