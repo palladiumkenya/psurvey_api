@@ -11,3 +11,10 @@ class UserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = Users
         fields = ['id', 'msisdn', 'password', 'designation', 'facility', 'email', 'f_name', 'l_name']
+
+
+class FacilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Facility
+        fields = '__all__'
+
