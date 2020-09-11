@@ -32,6 +32,7 @@ class Designation(models.Model):
 
 class Access_Level(models.Model):
     access_level = models.CharField(max_length=15)
+    created_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return self.access_level
@@ -49,7 +50,7 @@ class Users(AbstractBaseUser, PermissionsMixin):
     msisdn = models.CharField(max_length=15, unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
-    access_level = models.ForeignKey(Access_Level, on_delete=models.CASCADE, default=1)
+    access_level = models.ForeignKey(Access_Level, on_delete=models.CASCADE, null=True, blank=True)
 
     date_joined = models.DateTimeField(default=timezone.now)
 
