@@ -30,15 +30,27 @@ class Designation(models.Model):
         db_table = "Designations"
 
 
+class Access_Level(models.Model):
+    access_level = models.CharField(max_length=15)
+
+    def __str__(self):
+        return self.access_level
+
+    class Meta:
+        db_table = "Access_Level"
+
+
 class Users(AbstractBaseUser, PermissionsMixin):
     f_name = models.CharField(max_length=50, unique=False)
     l_name = models.CharField(max_length=50, unique=False)
-    designation = models.ForeignKey(Designation, on_delete=models.CASCADE)
-    facility = models.ForeignKey(Facility, on_delete=models.CASCADE)
+    designation = models.ForeignKey(Designation, on_delete=models.CASCADE, null=True, blank=True)
+    facility = models.ForeignKey(Facility, on_delete=models.CASCADE, null=True, blank=True)
     email = models.EmailField(_('email address'), unique=True)
     msisdn = models.CharField(max_length=15, unique=True)
     is_staff = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
+    access_level = models.ForeignKey(Access_Level, on_delete=models.CASCADE, default=1)
+
     date_joined = models.DateTimeField(default=timezone.now)
 
     USERNAME_FIELD = 'msisdn'
@@ -51,3 +63,18 @@ class Users(AbstractBaseUser, PermissionsMixin):
 
     class Meta:
         db_table = "User"
+
+
+class Partner (models.Model):
+    name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = "Partner"
+
+class Partner_Facility (models.Model):
+    user = models.ForeignKey(Users, on_delete=models.CASCADE)
+    partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
+    facility = models.OneToOneField(Facility, on_delete=models.CASCADE)
+
+    class Meta:
+        db_table = "Partner_Facility"

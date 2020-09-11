@@ -32,6 +32,7 @@ ALLOWED_HOSTS = ['*']
 
 INSTALLED_APPS = [
     'authApp',
+    'survey',
 
     'django.contrib.admin',
     'django.contrib.auth',
@@ -110,8 +111,9 @@ DJOSER = {
     'LOGIN_FIELD': 'msisdn',
     'USER_CREATE_PASSWORD_RETYPE': True,
     'SERIALIZERS': {
-        'user_create': 'authApp.serializer.UserCreateSerializer',
-        'user': 'authApp.serializer.UserCreateSerializer'
+        'user_create': 'authApp.serializer.MyUserCreateSerializer',
+        'user': 'authApp.serializer.MyUserSerializer',
+        # 'current_user': 'authApp.serializer.MyUserSerializer'
     }
 }
 
@@ -155,3 +157,5 @@ USE_TZ = True
 STATIC_URL = '/static/'
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+
+DATA_UPLOAD_MAX_NUMBER_FIELDS = 10240

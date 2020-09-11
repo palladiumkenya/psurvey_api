@@ -15,15 +15,15 @@ class FacilitySerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class UserSerializer(UserSerializer):
+class MyUserSerializer(UserSerializer):
     designation = DesignationSerializer(read_only=True)
     facility = FacilitySerializer(read_only=True)
     class Meta:
         model=Users
-        fields = ['id', 'msisdn', 'designation', 'facility', 'email', 'f_name', 'l_name']
+        fields = ['id', 'msisdn', 'email', 'f_name', 'l_name', 'designation', 'facility']
 
 
-class UserCreateSerializer(UserCreateSerializer):
+class MyUserCreateSerializer(UserCreateSerializer):
     class Meta(UserCreateSerializer.Meta):
         model = Users
-        fields = ['id', 'msisdn', 'password', 'designation', 'facility', 'email', 'f_name', 'l_name']
+        fields = ['id', 'msisdn', 'password', 'email', 'f_name', 'l_name', 'designation', 'facility', 'access_level']

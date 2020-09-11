@@ -1,0 +1,113 @@
+{% extends 'survey/base.html' %}
+{% block title %}
+Question list
+{% endblock %}
+{% block breadcrumb %}
+
+              <h6 class="h2 text-white d-inline-block mb-0">Questions</h6>
+              <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+                <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+                  <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i></a></li>
+                    <li class="breadcrumb-item"><a href="{% url 'questionnaires' %}"><small>questionnaires</small></a></li>
+                    <li class="breadcrumb-item"><a href="."><small>questions</small></a></li>
+                  <li class="breadcrumb-item active" aria-current="page"><small>questions</small></li>
+                </ol>
+              </nav>
+{% endblock %}
+{% block body %}
+
+        </div>
+      </div>
+    </div>
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+      <div class="row">
+        <div class="col">
+          <div class="card">
+            <!-- Card header -->
+            <div class="card-header border-0">
+                <div class="row align-items-center py-4">
+
+              <h3 class="mb-0">Question List</h3>
+                <div class="col-lg-6 col-5 text-right">
+              <a href="{% url 'add-question' q_id=questionnaire %}" class="btn btn-sm btn-neutral">Add question</a>
+              <a href="#" class="btn btn-sm btn-neutral">Filters</a>
+          </div>
+            </div>
+            </div>
+            <!-- Light table -->
+            <div class="table-responsive">
+              <table class="table align-items-center table-flush table-dark">
+                <thead class="thead-dark">
+                  <tr>
+                    <th scope="col">Question</th>
+                    <th scope="col">Question Type</th>
+                    <th scope="col">User</th>
+                    <th scope="col">Access Level</th>
+                    <th scope="col">Created at</th>
+                    <th scope="col"></th>
+                  </tr>
+                </thead>
+                <tbody class="list">
+                {% for foo in quest %}
+                    <tr>
+                    <td>{{ foo.question }}</td>
+                    <td>
+                        {% if foo.question_type == 1 %}
+                            Open Ended
+                        {% elif foo.question_type == 2 %}
+                            Single Select
+                        {% elif foo.question_type == 3 %}
+                            Multiple Select
+                    {% endif %} </td>
+                    <td>{{ foo.created_by.f_name }}</td>
+                    <td>{{ foo.created_by.access_level.access_level }}</td>
+                    <td>{{ foo.created_at }}</td>
+                    <td class="text-right">
+                      <div class="dropdown">
+                        <a class="btn btn-sm btn-icon-only text-light" href="#" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                          <i class="fas fa-ellipsis-v"></i>
+                        </a>
+                        <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
+                          <a class="dropdown-item" href="#">Edit Question</a>
+                          <a class="dropdown-item" href="{% url 'add-question' q_id=foo.id  %}">Edit Questions</a>
+                        </div>
+                      </div>
+                    </td>
+                    </tr>
+                {% endfor %}
+
+                </tbody>
+              </table>
+            </div>
+            <!-- Card footer -->
+            <div class="card-footer py-4">
+              <nav aria-label="...">
+                <ul class="pagination justify-content-end mb-0">
+                  <li class="page-item disabled">
+                    <a class="page-link" href="#" tabindex="-1">
+                      <i class="fas fa-angle-left"></i>
+                      <span class="sr-only">Previous</span>
+                    </a>
+                  </li>
+                  <li class="page-item active">
+                    <a class="page-link" href="#">1</a>
+                  </li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">2 <span class="sr-only">(current)</span></a>
+                  </li>
+                  <li class="page-item"><a class="page-link" href="#">3</a></li>
+                  <li class="page-item">
+                    <a class="page-link" href="#">
+                      <i class="fas fa-angle-right"></i>
+                      <span class="sr-only">Next</span>
+                    </a>
+                  </li>
+                </ul>
+              </nav>
+            </div>
+          </div>
+        </div>
+      </div>
+
+{% endblock %}
