@@ -29,7 +29,7 @@
 
                         <h3 class="mb-0">Question List</h3>
                         <div class="col-lg-6 col-5 text-right">
-                            <a href="#" class="btn btn-sm btn-neutral">New partner facility link</a>
+                            <a href="{% url 'register-partner' %}" class="btn btn-sm btn-neutral">New partner facility link</a>
                             <a href="#" class="btn btn-sm btn-neutral">Filters</a>
                         </div>
                     </div>
@@ -40,28 +40,19 @@
                     <table class="table align-items-center table-flush table-dark">
                         <thead class="thead-dark">
                         <tr>
-                            <th scope="col">Question</th>
-                            <th scope="col">Question Type</th>
-                            <th scope="col">User</th>
+                            <th scope="col">Partner</th>
+                            <th scope="col">Created by</th>
                             <th scope="col">Access Level</th>
                             <th scope="col">Created at</th>
                             <th scope="col"></th>
                         </tr>
                         </thead>
                         <tbody class="list">
-                        {% for foo in quest %}
+                        {% for foo in partner %}
                             <tr>
-                                <td>{{ foo.question }}</td>
-                                <td>
-                                    {% if foo.question_type == 1 %}
-                                        Open Ended
-                                    {% elif foo.question_type == 2 %}
-                                        Single Select
-                                    {% elif foo.question_type == 3 %}
-                                        Multiple Select
-                                    {% endif %} </td>
+                                <td>{{ foo.name }}</td>
                                 <td>{{ foo.created_by.f_name }}</td>
-                                <td>{{ foo.created_by.access_level.access_level }}</td>
+                                <td>{{ foo.created_by.access_level }}</td>
                                 <td>{{ foo.created_at }}</td>
                                 <td class="text-right">
                                     <div class="dropdown">
@@ -70,7 +61,7 @@
                                             <i class="fas fa-ellipsis-v"></i>
                                         </a>
                                         <div class="dropdown-menu dropdown-menu-right dropdown-menu-arrow">
-                                            <a class="dropdown-item" href="#">Edit Question</a>
+                                            <a class="dropdown-item" href=".">Edit Partner</a>
                                             <a class="dropdown-item" href="#">Edit Questions</a>
                                         </div>
                                     </div>

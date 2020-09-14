@@ -70,8 +70,10 @@ def home(request):
 @login_required
 def facility_partner_list (request):
     user = request.user
+    partner = Partner.objects.all()
     context = {
         'u': user,
+        'partner': partner
     }
     return render(request, 'authApp/partner_facility_list.html', context)
 
@@ -143,6 +145,14 @@ def register_partner (request):
     }
     return render(request, 'authApp/new_partner_link.html', context)
 
+
+
+def profile (request):
+    u = request.user
+    context = {
+        'u': u,
+    }
+    return  render(request, 'authApp/profile.html', context)
 
 def logout_request(request):
     logout(request)

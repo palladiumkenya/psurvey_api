@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/current/user/', views.current_user),
     path('web/', views.home, name='web-login'),
     path('web/logout/', views.logout_request, name='web-logout'),
+    path('web/profile/', views.profile, name='profile'),
     path('web/facility-partner/', views.facility_partner_list, name='facility-partner-list'),
     path('web/facility-partner-link/', views.facility_partner_link, name='facility-partner-link'),
     path('web/register-partner/', views.register_partner, name='register-partner'),
