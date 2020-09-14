@@ -57,7 +57,7 @@ New Questionnaire
                                             <select class="form-control" data-live-search="true" multiple
                                                     name="facility" id="facility" required>
                                                 {% for foo in fac %}
-                                                    <option value="{{ foo.id }}">{{ foo.name }}</option>
+                                                    <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
                                                 {% endfor %}
                                             </select>
                                         </div>

@@ -146,7 +146,7 @@ def register_partner (request):
     return render(request, 'authApp/new_partner_link.html', context)
 
 
-
+@login_required
 def profile (request):
     u = request.user
     context = {
