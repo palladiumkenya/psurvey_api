@@ -8,7 +8,7 @@ from authApp.models import *
 # Create your views here.
 @login_required
 def index (request):
-    user = request.user.f_name + ' ' +request.user.l_name
+    user = request.user
     context = {'u': user}
     return render(request, 'survey/dashboard.html', context)
 
@@ -16,7 +16,7 @@ def index (request):
 @login_required
 def new_questionnaire (request):
     user = request.user
-    u = user.f_name + ' ' + user.l_name
+    u = user
     if request.method == 'POST':
         name = request.POST.get('title')
         facility = request.POST.getlist('facility')
@@ -70,7 +70,7 @@ def new_questionnaire (request):
 @login_required
 def questionnaire (request):
     user = request.user
-    u = user.f_name + ' ' + user.l_name
+    u = user
     if user.access_level.id == 3:
         quest = Questionnaire.objects.all().order_by('-created_at')
         context = {
@@ -93,7 +93,7 @@ def questionnaire (request):
 
 def add_question (request, q_id):
     user = request.user
-    u = user.f_name + ' ' + user.l_name
+    u = user
     if request.method == 'POST':
         question = request.POST.get('question')
         q_type = request.POST.get('q_type') #For q_type 1 is opened ended 2 Radio 3 is Checkbox
@@ -123,7 +123,7 @@ def add_question (request, q_id):
 
 def question_list (request, q_id):
     user = request.user
-    u = user.f_name + ' ' + user.l_name
+    u = user
     if user.access_level.id == 3:
         quest = Question.objects.filter(questionnaire_id=q_id).order_by('-created_at')
         context = {

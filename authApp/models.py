@@ -67,14 +67,18 @@ class Users(AbstractBaseUser, PermissionsMixin):
 
 class Partner (models.Model):
     name = models.CharField(max_length=50)
+    user = models.OneToOneField(Users, on_delete=models.CASCADE, default=1)
+    created_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='partner_created_by', default=1)
 
     class Meta:
         db_table = "Partner"
 
 class Partner_Facility (models.Model):
-    user = models.ForeignKey(Users, on_delete=models.CASCADE)
     partner = models.ForeignKey(Partner, on_delete=models.CASCADE)
     facility = models.OneToOneField(Facility, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(Users, on_delete=models.CASCADE, related_name='link_created_by', default=1)
 
     class Meta:
         db_table = "Partner_Facility"
