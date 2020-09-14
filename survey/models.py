@@ -31,6 +31,7 @@ class Answer (models.Model):
     question= models.ForeignKey(Question, on_delete=models.CASCADE)
     option = models.CharField(max_length=20)
     created_at = models.DateTimeField(auto_now=True)
+    created_by = models.ForeignKey(Users, on_delete=models.CASCADE, default=1)
 
     class Meta:
         db_table = "Answers"
