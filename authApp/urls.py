@@ -9,7 +9,9 @@ urlpatterns = [
     path('api/facilities/', views.facilities),
     path('api/designation/', views.designation),
     path('api/current/user/', views.current_user),
-    path('web/', views.home, name='web-login'),
+
+
+    path('web/', views.web_login, name='web-login'),
     path('web/logout/', views.logout_request, name='web-logout'),
     path('web/profile/', views.profile, name='profile'),
     path('web/facility-partner/', views.facility_partner_list, name='facility-partner-list'),
