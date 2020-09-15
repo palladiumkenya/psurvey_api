@@ -2,8 +2,13 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render
+from .serializer import *
 from .models import *
 from authApp.models import *
+from rest_framework.response import Response
+from rest_framework import status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
 # Create your views here.
 @login_required
@@ -102,14 +107,14 @@ def add_question (request, q_id):
             answers = "Open Text"
         answers_list = answers.split(',')
 
-        q_save = Question.objects.create(question=question, question_type=q_type, questionnaire_id=q_id)
+        q_save = Question.objects.create(question=question, question_type=q_type, created_by=user, questionnaire_id=q_id)
         trans_one = transaction.savepoint()
         question_id = q_save.pk
 
         if question_id:
             try:
                 for f in answers_list:
-                    fac_save = Answer.objects.create(question_id=question_id, option=f)
+                    fac_save = Answer.objects.create(question_id=question_id, created_by=user, option=f)
                     fac_save.save()
             except IntegrityError:
                 transaction.savepoint_rollback(trans_one)
@@ -150,3 +155,17 @@ def question_list (request, q_id):
         return render(request, 'survey/question_list.html', context)
 
     # return render(request, 'survey/partner_facility_list.html', context)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_questionnaire_api(request):
+    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+    list = []
+    for i in quest:
+        queryset = Questionnaire.objects.filter(id=i.questionnaire.id)
+        serializer =  QuestionnaireSerializer(queryset, many=True)
+        list.append(serializer.data[0])
+    print(list)
+    return Response(data={"data": list}, status=status.HTTP_200_OK)
+

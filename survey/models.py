@@ -5,7 +5,7 @@ from authApp.models import Facility, Users
 
 
 class Questionnaire (models.Model):
-    name = models.CharField(max_length=15)
+    name = models.CharField(max_length=100)
     description = models.CharField(max_length=150)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE)
@@ -18,7 +18,7 @@ class Questionnaire (models.Model):
 
 class Question (models.Model):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
-    question =  models.CharField(max_length=50)
+    question =  models.CharField(max_length=150)
     question_type = models.IntegerField()
     created_at = models.DateTimeField(auto_now=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE)

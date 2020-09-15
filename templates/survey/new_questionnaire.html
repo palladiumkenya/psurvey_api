@@ -123,6 +123,10 @@ New Questionnaire
             qForm.submit(function (e) {
 
                 e.preventDefault();
+                var thisForm = $(this);
+                var endPoint = thisForm.attr("action") || window.location.href;
+                var method = thisForm.attr("method");
+                var formData = thisForm.serialize();
 
 
                 Swal.fire({
@@ -136,28 +140,7 @@ New Questionnaire
                     url: endPoint,
                     data: formData,
                     success: function (data) {
-                        if (name.length < 1) {
-                            Swal.fire({
-                                title: 'error!',
-                                text: 'Enter a Title',
-                                icon: 'error'
-                            });
-                            document.getElementById("title").focus();
-                        } else if (fac.length < 1) {
-                            Swal.fire({
-                                title: 'error!',
-                                text: 'Enter Target facilities',
-                                icon: 'error'
-                            });
-                            document.getElementById("facility").focus();
-                        } else if (desc.length < 1) {
-                            Swal.fire({
-                                title: 'error!',
-                                text: 'Enter Description',
-                                icon: 'error'
-                            });
-                            document.getElementById("description").focus();
-                        } else if (data == "error") {
+                        if (data == "error") {
                             console.log(qForm[0])
                             Swal.fire({
                                 title: 'Enter all Data Entry!!',
