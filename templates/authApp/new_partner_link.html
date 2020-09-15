@@ -46,7 +46,7 @@
                             <div class="form-group">
                                 <label class="form-control-label" for="partner-user">Partner level Users</label>
                                 <div>
-                                    <select class="form-control" name="partner-user" id="partner-user" required>
+                                    <select class="form-control" name="partner-user" id="partner-user" placeholder="Partner User" required>
                                         {% for foo in p_users %}
                                             <option value="{{ foo.id }}">{{ foo.user.email }} | {{ foo.user.msisdn }}
                                                 | {{ foo.name }}</option>
@@ -57,7 +57,7 @@
                             <div class="form-group">
                                 <label class="form-control-label" for="facility">Target Facility</label>
                                 <div>
-                                    <select multiple="multiple" class="form-control" name="facility" id="facility" required>
+                                    <select multiple="multiple" class="form-control" name="facility" id="facility" placeholder="Facilities" required>
                                         {% for foo in fac %}
                                             <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
                                         {% endfor %}
@@ -172,6 +172,7 @@
                 multiple: true,
                 multipleWidth: 400,
                 filter: true,
+                filterPlaceholder: 'Search'
             })
         })
     </script>
