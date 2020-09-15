@@ -6,7 +6,7 @@ from authApp.models import Facility, Users
 
 class Questionnaire (models.Model):
     name = models.CharField(max_length=100)
-    description = models.CharField(max_length=150)
+    description = models.CharField(max_length=750)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE)
     created_at = models.DateTimeField(auto_now=True)

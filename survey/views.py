@@ -59,7 +59,7 @@ def list_question_api (request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def start_questionnaire (request):
-    quest = Question.objects.filter(questionnaire_id=request.data['question_id'])[:1]
+    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
     for q in quest:
         serializer = QuestionSerializer(q)
         queryset =  Answer.objects.filter(question_id=q.id)
@@ -137,14 +137,86 @@ def new_questionnaire (request):
 
 
 @login_required
+def edit_questionnaire (request, q_id):
+    user = request.user
+    u = user
+    if request.method == 'POST':
+        name = request.POST.get('title')
+        facility = request.POST.getlist('facility')
+        desc = request.POST.get('description')
+        dateTill = request.POST.get('date-till')
+        isActive = request.POST.get('isActive')
+
+
+        if isActive == "inactive":
+            isActive = False
+        else:
+            isActive = True
+
+        create_quest = Questionnaire.objects.get(id=q_id)
+        create_quest.name=name
+        create_quest.is_active=isActive
+        create_quest.description=desc
+        create_quest.active_till=dateTill
+
+        create_quest.save()
+        trans_one = transaction.savepoint()
+
+        if q_id:
+            try:
+                fac = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
+                fac_list = []
+                for fi in fac:
+                    fac_list.append(str(fi.facility_id))
+                print(facility)
+                for f in fac_list:
+                    fac_rem = Facility_Questionnaire.objects.filter(facility_id=f, questionnaire_id=q_id)
+                    fac_rem.delete()
+
+                for f in facility:
+                    fac_save = Facility_Questionnaire.objects.create(facility_id=f, questionnaire_id=q_id)
+                    fac_save.save()
+            except IntegrityError:
+                transaction.savepoint_rollback(trans_one)
+                return HttpResponse("error")
+
+    if user.access_level.id == 3:
+        question = Questionnaire.objects.get(id=q_id)
+        selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
+        facilities = Facility.objects.all().exclude(id__in=selected.values_list('facility_id', flat=True))
+        s = Facility.objects.all().filter(id__in=selected.values_list('facility_id', flat=True))
+
+        context = {
+            'u': u,
+            'fac': facilities,
+            'q': question,
+            'fac_sel': s,
+        }
+        return render(request, 'survey/edit_questionnaire.html', context)
+    if user.access_level == 2:
+        facp = Partner_Facility.objects.filter(partner__user=user)
+        facilities = []
+        for f in facp:
+            facilities.append(Facility.objects.filter(id=facp.id))
+        print(facilities)
+        context = {
+            'u': u,
+            'fac': facilities,
+        }
+        return render(request, 'survey/edit_questionnaire.html', context)
+
+
+@login_required
 def questionnaire (request):
     user = request.user
     u = user
     if user.access_level.id == 3:
         quest = Questionnaire.objects.all().order_by('-created_at')
+        fac = Facility.objects.all()
         context = {
             'u': u,
-            'quest': quest
+            'quest': quest,
+            'fac': fac
         }
         return render(request, 'survey/questionnaires.html', context)
     elif user.access_level.id == 2:
