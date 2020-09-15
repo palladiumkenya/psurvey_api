@@ -35,13 +35,15 @@ def designation(request):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def current_user(request):
     if request.method == "GET":
         queryset = Users.objects.get(id=request.user.id)
         serializer = MyUserSerializer(queryset)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-def home(request):
+
+def web_login (request):
 
     if request.method == 'POST':
         form = LoginForm(request.POST)
@@ -96,8 +98,6 @@ def facility_partner_link (request):
             return HttpResponse("error")
 
     partner_users = Partner.objects.filter(user__access_level_id=2)
-    for p in partner_users:
-        print(p.user)
     context = {
         'u': user,
         'fac': facilities,

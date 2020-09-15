@@ -2,10 +2,81 @@ from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.http import HttpResponse
 from django.shortcuts import render
-from .models import *
-from authApp.models import *
+from rest_framework import status
+from rest_framework.response import Response as Res
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
-# Create your views here.
+from .models import *
+from .serializer import *
+from authApp.serializer import *
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def all_questionnaire_api(request):
+    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+    list = []
+    for i in quest:
+        queryset = Questionnaire.objects.filter(id=i.questionnaire.id)
+        serializer =  QuestionnaireSerializer(queryset, many=True)
+        list.append(serializer.data[0])
+    print(list)
+    return Res({"data": list}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def active_questionnaire_api (request):
+    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+    list = []
+    for i in quest:
+        queryset = Questionnaire.objects.filter(id=i.questionnaire.id, is_active=True)
+        serializer =  QuestionnaireSerializer(queryset, many=True)
+        list.append(serializer.data[0])
+    print(list)
+    return Res({"data": list}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def all_question_api (request):
+    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])
+    serializer = QuestionSerializer(quest, many=True)
+
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def list_question_api (request):
+    quest = Answer.objects.filter(question_id=request.data['question_id'])
+    serializer = QuestionResponseSerializer(quest, many=True)
+
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def start_questionnaire (request):
+    quest = Question.objects.filter(questionnaire_id=request.data['question_id'])[:1]
+    for q in quest:
+        serializer = QuestionSerializer(q)
+        queryset =  Answer.objects.filter(question_id=q.id)
+        ser = ResponseSerializer(queryset, many=True)
+
+    return Res({"Question": serializer.data, "Ans": ser.data}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def answer_question (request):
+    quest = Question.objects.filter(questionnaire_id=request.data['question_id'])
+    serializer = QuestionSerializer(quest, many=True)
+
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
+
+
 @login_required
 def index (request):
     user = request.user
@@ -23,8 +94,6 @@ def new_questionnaire (request):
         desc = request.POST.get('description')
         dateTill = request.POST.get('date-till')
         isActive = request.POST.get('isActive')
-        if name == '' or len(facility) == 0 or desc == '':
-            return HttpResponse('error')
 
 
         if isActive == "inactive":
@@ -55,7 +124,7 @@ def new_questionnaire (request):
         }
         return render(request, 'survey/new_questionnaire.html', context)
     if user.access_level == 2:
-        facp = Partner_Facility.objects.filter(user=user)
+        facp = Partner_Facility.objects.filter(partner__user=user)
         facilities = []
         for f in facp:
             facilities.append(Facility.objects.filter(id=facp.id))
@@ -91,6 +160,7 @@ def questionnaire (request):
         return render(request, 'survey/questionnaires.html', context)
 
 
+@login_required
 def add_question (request, q_id):
     user = request.user
     u = user
@@ -101,15 +171,16 @@ def add_question (request, q_id):
         if q_type == '1':
             answers = "Open Text"
         answers_list = answers.split(',')
+        print(question,q_type, answers_list)
 
-        q_save = Question.objects.create(question=question, question_type=q_type, questionnaire_id=q_id)
+        q_save = Question.objects.create(question=question, question_type=q_type, created_by=user , questionnaire_id=q_id)
         trans_one = transaction.savepoint()
         question_id = q_save.pk
 
         if question_id:
             try:
                 for f in answers_list:
-                    fac_save = Answer.objects.create(question_id=question_id, option=f)
+                    fac_save = Answer.objects.create(question_id=question_id, created_by=user ,option=f)
                     fac_save.save()
             except IntegrityError:
                 transaction.savepoint_rollback(trans_one)
@@ -121,6 +192,7 @@ def add_question (request, q_id):
     return render(request, 'survey/new_questions.html', context)
 
 
+@login_required
 def question_list (request, q_id):
     user = request.user
     u = user
@@ -149,4 +221,3 @@ def question_list (request, q_id):
         }
         return render(request, 'survey/question_list.html', context)
 
-    # return render(request, 'survey/partner_facility_list.html', context)
