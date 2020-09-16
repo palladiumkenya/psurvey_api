@@ -66,9 +66,8 @@ class Patient_Consent(models.Model):
 
 
 class End_Questionnaire (models.Model):
-    ccc_number = models.CharField(max_length=15)
-    firstname = models.CharField(max_length=30)
-    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    session = models.ForeignKey(Started_Questionnaire, on_delete=models.CASCADE, default=1)
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, default=1)
 
     class Meta:
         db_table = "End_Questionnaire"
