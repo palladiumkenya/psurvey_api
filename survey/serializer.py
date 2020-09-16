@@ -24,5 +24,11 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
 
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
+        model = Response
+        fields = '__all__'
+
+
+class AnswerSerializer(serializers.ModelSerializer):
+    class Meta:
         model = Answer
         fields = '__all__'

@@ -62,19 +62,76 @@ def start_questionnaire (request):
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
     for q in quest:
         serializer = QuestionSerializer(q)
-        queryset =  Answer.objects.filter(question_id=q.id)
-        ser = ResponseSerializer(queryset, many=True)
-
-    return Res({"Question": serializer.data, "Ans": ser.data}, status.HTTP_200_OK)
+        queryset = Answer.objects.filter(question_id=q.id)
+        ser = AnswerSerializer(queryset, many=True)
+    consent = Patient_Consent.objects.create(questionnaire_id=request.data['questionnaire_id'], ccc_number=request.data['ccc_number'])
+    consent.save()
+    session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                   started_by=request.user,
+                                                   ccc_number=request.data['ccc_number'],
+                                                   firstname=request.data['first_name'])
+    session.save()
+    return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def answer_question (request):
-    quest = Question.objects.filter(questionnaire_id=request.data['question_id'])
-    serializer = QuestionSerializer(quest, many=True)
+    serializer = ResponseSerializer(data=request.data)
+    try:
+        if serializer.is_valid():
+            serializer.save()
+            data = check_answer_algo(serializer)
+        else:
+            return Res({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+    except Exception as e:
+        return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    return Res({"data": serializer.data}, status.HTTP_200_OK)
+    return data
+
+
+def check_answer_algo(ser):
+    q = Question.objects.get(id=ser.data['question'])
+    quest = Questionnaire.objects.get(id=q.questionnaire_id)
+    questions = Question.objects.filter(questionnaire=quest)
+    answer = Answer.objects.filter(question=q, id=ser.data['answer']).count()
+    if answer == 0:
+        serializer = QuestionSerializer(q)
+        queryset = Answer.objects.filter(question=q)
+        ans_ser = AnswerSerializer(queryset, many=True)
+        return Res({
+            "success": False,
+            "error":"Response Provided not associated with Question",
+            "Question": serializer.data,
+            "Ans": ans_ser.data,
+            "session_id": ser.data['session']
+        }, status=status.HTTP_400_BAD_REQUEST)
+
+    foo = q
+    previous = next_ = None
+    l = len(questions)
+    for index, obj in enumerate(questions):
+        if obj == foo:
+            if index > 0:
+                previous = questions[index - 1]
+            if index < (l - 1):
+                next_ = questions[index + 1]
+                serializer = QuestionSerializer(next_)
+                queryset = Answer.objects.filter(question=next_)
+                ans_ser = AnswerSerializer(queryset, many=True)
+                return Res({
+                    "success": True,
+                    "Question": serializer.data,
+                    "Ans": ans_ser.data,
+                    "session_id": ser.data['session']
+                }, status.HTTP_200_OK)
+            elif next_ == None:
+                return Res({
+                    "success": True,
+                    "Message": "Questionnaire complete, Thank You👌!"
+                }, status.HTTP_200_OK)
+
+    return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @login_required
@@ -212,11 +269,13 @@ def questionnaire (request):
     u = user
     if user.access_level.id == 3:
         quest = Questionnaire.objects.all().order_by('-created_at')
+        count = Questionnaire.objects.all().count()
         fac = Facility.objects.all()
         context = {
             'u': u,
             'quest': quest,
-            'fac': fac
+            'fac': fac,
+            'count': count,
         }
         return render(request, 'survey/questionnaires.html', context)
     elif user.access_level.id == 2:
