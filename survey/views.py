@@ -82,17 +82,14 @@ def answer_question (request):
         for i in a['answer']:
             a.update({'answer': i})
             serializer = ResponseSerializer(data=a)
-            print(serializer.is_valid(raise_exception=True))
-            try:
-                if serializer.is_valid():
-                    serializer.save()
-                    data = check_answer_algo(serializer)
-                else:
-                    transaction.savepoint_rollback(trans_one)
-                    return Res({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-            except Exception as e:
-                print(e)
-                return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                data = check_answer_algo(serializer)
+
+            else:
+                transaction.savepoint_rollback(trans_one)
+                break
+
     else:
         serializer = ResponseSerializer(data=request.data)
         print(serializer.is_valid(raise_exception=True))
