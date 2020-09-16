@@ -1,5 +1,6 @@
 from .models import *
-from rest_framework import serializers
+from rest_framework import serializers, status
+from rest_framework.response import Response as Res
 
 
 class QuestionnaireSerializer(serializers.ModelSerializer):
@@ -22,10 +23,33 @@ class QuestionResponseSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
+class StartQuestionnaireSerializer (serializers.ModelSerializer):
+    class Meta:
+        model = Started_Questionnaire
+        fields = ('id')
+
+
 class ResponseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Response
         fields = '__all__'
+
+    def validate(self, value):
+        question = value['question']
+        answer = value['answer']
+        if answer.question_id != question.id:
+            serializer = QuestionSerializer(question)
+            queryset = Answer.objects.filter(question=question)
+            ans_ser = AnswerSerializer(queryset, many=True)
+            raise serializers.ValidationError({
+                "success": False,
+                "error": "Response Provided not associated with Question",
+                "Question": serializer.data,
+                "Ans": ans_ser.data,
+                "session_id": value['session'].id
+            })
+        else:
+            return value
 
 
 class AnswerSerializer(serializers.ModelSerializer):

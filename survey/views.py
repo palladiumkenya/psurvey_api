@@ -29,13 +29,10 @@ def all_questionnaire_api(request):
 @permission_classes([IsAuthenticated])
 def active_questionnaire_api (request):
     quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
-    list = []
-    for i in quest:
-        queryset = Questionnaire.objects.filter(id=i.questionnaire.id, is_active=True)
-        serializer =  QuestionnaireSerializer(queryset, many=True)
-        list.append(serializer.data[0])
-    print(list)
-    return Res({"data": list}, status.HTTP_200_OK)
+
+    queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True)
+    serializer =  QuestionnaireSerializer(queryset, many=True)
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -77,35 +74,41 @@ def start_questionnaire (request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def answer_question (request):
-    serializer = ResponseSerializer(data=request.data)
-    try:
-        if serializer.is_valid():
-            serializer.save()
-            data = check_answer_algo(serializer)
-        else:
-            return Res({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
-    except Exception as e:
-        return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    q = Question.objects.get(id=request.data['question'])
+
+    if q.question_type == 3:
+        a = request.data.copy()
+        trans_one = transaction.savepoint()
+        for i in a['answer']:
+            a.update({'answer': i})
+            serializer = ResponseSerializer(data=a)
+            if serializer.is_valid(raise_exception=True):
+                serializer.save()
+                data = check_answer_algo(serializer)
+
+            else:
+                transaction.savepoint_rollback(trans_one)
+                break
+
+    else:
+        serializer = ResponseSerializer(data=request.data)
+        print(serializer.is_valid(raise_exception=True))
+        try:
+            if serializer.is_valid():
+                data = check_answer_algo(serializer)
+            else:
+                return Res({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     return data
 
 
 def check_answer_algo(ser):
+    ser.save()
     q = Question.objects.get(id=ser.data['question'])
     quest = Questionnaire.objects.get(id=q.questionnaire_id)
     questions = Question.objects.filter(questionnaire=quest)
-    answer = Answer.objects.filter(question=q, id=ser.data['answer']).count()
-    if answer == 0:
-        serializer = QuestionSerializer(q)
-        queryset = Answer.objects.filter(question=q)
-        ans_ser = AnswerSerializer(queryset, many=True)
-        return Res({
-            "success": False,
-            "error":"Response Provided not associated with Question",
-            "Question": serializer.data,
-            "Ans": ans_ser.data,
-            "session_id": ser.data['session']
-        }, status=status.HTTP_400_BAD_REQUEST)
 
     foo = q
     previous = next_ = None
@@ -126,11 +129,12 @@ def check_answer_algo(ser):
                     "session_id": ser.data['session']
                 }, status.HTTP_200_OK)
             elif next_ == None:
+                end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
+                end.save()
                 return Res({
                     "success": True,
                     "Message": "Questionnaire complete, Thank You👌!"
                 }, status.HTTP_200_OK)
-
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
 
