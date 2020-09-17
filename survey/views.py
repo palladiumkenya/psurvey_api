@@ -1,3 +1,5 @@
+from datetime import date
+
 from django.contrib.auth.decorators import login_required
 from django.db import transaction, IntegrityError
 from django.http import HttpResponse
@@ -12,6 +14,7 @@ from .serializer import *
 from authApp.serializer import *
 
 
+# api
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_questionnaire_api(request):
@@ -30,7 +33,7 @@ def all_questionnaire_api(request):
 def active_questionnaire_api (request):
     quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
 
-    queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True)
+    queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, active_till__gte=date.today())
     serializer =  QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
@@ -138,11 +141,20 @@ def check_answer_algo(ser):
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+# web
 @login_required
 def index (request):
-    user = request.user
-    context = {'u': user}
-    return render(request, 'survey/dashboard.html', context)
+    if request.user.access_level.id == 3:
+        fac = Facility.objects.all()
+        quest = Questionnaire.objects.all()
+        user = request.user
+        context = {
+            'u': user,
+            'fac': fac,
+            'quest': quest,
+
+        }
+        return render(request, 'survey/dashboard.html', context)
 
 
 @login_required
