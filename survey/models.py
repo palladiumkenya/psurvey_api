@@ -66,7 +66,7 @@ class Patient_Consent(models.Model):
 
 
 class End_Questionnaire (models.Model):
-    session = models.ForeignKey(Started_Questionnaire, on_delete=models.CASCADE, default=1)
+    session = models.OneToOneField(Started_Questionnaire, on_delete=models.CASCADE, default=1)
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE, default=1)
 
     class Meta:
@@ -79,3 +79,21 @@ class Facility_Questionnaire (models.Model):
 
     class Meta:
         db_table = "Facility_Questionnaire"
+
+
+class Group (models.Model):
+    name = models.CharField(max_length=100)
+    description = models.CharField(max_length=200)
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "Groups"
+
+
+class Group_Questionnaire (models.Model):
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    created_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "Group_Questionnaire"

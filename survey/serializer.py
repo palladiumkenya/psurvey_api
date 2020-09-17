@@ -37,6 +37,13 @@ class ResponseSerializer(serializers.ModelSerializer):
     def validate(self, value):
         question = value['question']
         answer = value['answer']
+        session = value['session']
+        if End_Questionnaire.objects.filter(session=session).count() > 0:
+            raise serializers.ValidationError({
+                "success": False,
+                "error": "Session already Ended"
+            })
+
         if answer.question_id != question.id:
             serializer = QuestionSerializer(question)
             queryset = Answer.objects.filter(question=question)

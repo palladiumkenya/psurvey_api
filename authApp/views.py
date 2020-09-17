@@ -10,20 +10,23 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, views
 from rest_framework.generics import ListCreateAPIView, RetrieveUpdateAPIView
-from rest_framework.response import Response
+from rest_framework.response import Response as Res
 from rest_framework.views import APIView
+from datetime import date
 
 from .forms import LoginForm
 from .serializer import *
 from .models import *
+from survey.models import *
 
 
+#api
 @api_view(['GET'])
 def facilities(request):
     if request.method == "GET":
         queryset = Facility.objects.all()
         serializer = FacilitySerializer(queryset, many=True)
-        return Response(data={"data": serializer.data}, status=status.HTTP_200_OK)
+        return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -31,7 +34,7 @@ def designation(request):
     if request.method == "GET":
         queryset = Designation.objects.all()
         serializer = DesignationSerializer(queryset, many=True)
-        return Response({"data": serializer.data}, status=status.HTTP_200_OK)
+        return Res({"data": serializer.data}, status=status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -40,9 +43,14 @@ def current_user(request):
     if request.method == "GET":
         queryset = Users.objects.get(id=request.user.id)
         serializer = MyUserSerializer(queryset)
-        return Response(serializer.data, status=status.HTTP_200_OK)
+        aq = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id,
+                                                   questionnaire__is_active=True,
+                                                   questionnaire__active_till__gte=date.today()).count()
+        cs = End_Questionnaire.objects.filter(session__started_by=request.user).count(       )
+        return Res({'user': serializer.data, 'Active_questionnaires':aq, 'Completed_surveys': cs}, status=status.HTTP_200_OK)
 
 
+# Web
 def web_login (request):
 
     if request.method == 'POST':
@@ -58,8 +66,6 @@ def web_login (request):
                         return HttpResponse('/web/dashboard')
                     else:
                         return HttpResponse('Not an admin')
-                # else:
-                #     return render(request, "authApp/login.html", {'form': form})
                 else:
                     return HttpResponse('Account is Disabled')
             else:
