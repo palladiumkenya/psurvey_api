@@ -6,7 +6,7 @@ from django.urls import path
 
 urlpatterns = [
     #web urls
-    path('web/reports/response', views.index, name='response_report'),
+    path('web/reports/response/<int:q_id>', views.index, name='response_report'),
 
 ]
 urlpatterns += staticfiles_urlpatterns()
