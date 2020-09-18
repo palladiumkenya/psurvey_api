@@ -19,7 +19,7 @@
     <link rel="stylesheet" href="{% static 'authApp/vendor/@fortawesome/fontawesome-free/css/all.min.css' %}"
           type="text/css">
     <!-- Page plugins -->
-<script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
     <!-- Argon CSS -->
     <link rel="stylesheet" href="{% static 'authApp/css/argon.css' %}" type="text/css">
     {% block headscript %}
@@ -53,7 +53,8 @@
                             <i class="ni ni-align-center text-orange"></i>
                             <span class="nav-link-text">Questionnaires</span>
                         </a>
-                    </li>                    <li class="nav-item">
+                    </li>
+                    <li class="nav-item">
                         <a class="nav-link" href="tables.html">
                             <i class="ni ni-chart-pie-35 text-default"></i>
                             <span class="nav-link-text">Reports</span>
@@ -66,12 +67,12 @@
                         </a>
                     </li>
                     {% if u.access_level_id == 3 %}
-                    <li class="nav-item">
-                        <a class="nav-link" href="{% url 'facility-partner-list' %}">
-                            <i class="ni ni-settings text-primary"></i>
-                            <span class="nav-link-text">Settings</span>
-                        </a>
-                    </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'facility-partner-list' %}">
+                                <i class="ni ni-settings text-primary"></i>
+                                <span class="nav-link-text">Settings</span>
+                            </a>
+                        </li>
                     {% endif %}
 
                 </ul>
@@ -186,14 +187,13 @@
                 </footer>
             </div>
         </div>
-
         <!-- Argon Scripts -->
         <!-- Core -->
-{#        <script src="{% static 'authApp/vendor/jquery/dist/jquery.min.js' %}"></script>#}
+        {#        <script src="{% static 'authApp/vendor/jquery/dist/jquery.min.js' %}"></script>#}
         <script src="{% static 'authApp/vendor/bootstrap/dist/js/bootstrap.bundle.min.js' %}"></script>
         <script src="{% static 'authApp/vendor/js-cookie/js.cookie.js' %}"></script>
-{#        <script src="{% static 'authApp/vendor/jquery.scrollbar/jquery.scrollbar.min.js' %}"></script>#}
-{#        <script src="{% static 'authApp/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js' %}"></script>#}
+        {#        <script src="{% static 'authApp/vendor/jquery.scrollbar/jquery.scrollbar.min.js' %}"></script>#}
+        {#        <script src="{% static 'authApp/vendor/jquery-scroll-lock/dist/jquery-scrollLock.min.js' %}"></script>#}
         <!-- Optional JS -->
 
         <script src="{% static 'authApp/vendor/chart.js/dist/Chart.min.js' %}"></script>

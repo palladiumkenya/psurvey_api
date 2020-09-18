@@ -29,6 +29,14 @@ def facilities(request):
         return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
 
 
+@api_view(['POST'])
+def facility_single(request):
+    if request.method == "POST":
+        queryset = Facility.objects.get(id=request.data['id'])
+        serializer = FacilitySerializer(queryset)
+        return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
+
+
 @api_view(['GET'])
 def designation(request):
     if request.method == "GET":
@@ -159,6 +167,7 @@ def profile (request):
         'u': u,
     }
     return  render(request, 'authApp/profile.html', context)
+
 
 def logout_request(request):
     logout(request)
