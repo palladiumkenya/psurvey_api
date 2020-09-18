@@ -58,7 +58,7 @@
         /* On mouse-over */
         .dropdown-container a:hover, .dropdown-btn:hover {
             color: #f1f1f1;
-            background-color: gray;
+            background-color: #f6f9fc;
         }
 
         /* Some media queries for responsiveness */
@@ -102,10 +102,21 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="tables.html">
+                        <button class="nav-link dropdown-btn">
+                            <i class="fa fa-caret-down"></i>
                             <i class="ni ni-chart-pie-35 text-default"></i>
                             <span class="nav-link-text">Reports</span>
-                        </a>
+                        </button>
+                        <div class="dropdown-container">
+                            <a class="nav-link " href="{% url 'response_report' %}  ">
+                                <i class="ni ni-box-2 text-black-50"></i>
+                                <span class="nav-link-text">Responses Reports</span>
+                            </a>
+                            <a class="nav-link " href="{% url 'facility-partner-list' %}  ">
+                                <i class="ni ni-compass-04 text-black-50"></i>
+                                <span class="nav-link-text">Facility Partner Link</span>
+                            </a>
+                        </div>
                     </li>
                     <li class="nav-item">
                         <a class="nav-link" href="{% url 'profile' %}">
@@ -129,7 +140,6 @@
                                     <i class="ni ni-compass-04 text-black-50"></i>
                                     <span class="nav-link-text">Facility Partner Link</span>
                                 </a>
-
                             </div>
                         </li>
                     {% endif %}
