@@ -84,6 +84,19 @@ def web_login (request):
 
 
 @login_required
+def designation_list (request):
+    user = request.user
+    if request.user.access_level.id != 3:
+        return PermissionError
+    designation = Designation.objects.all()
+    context = {
+        'u': user,
+        'desig': designation
+    }
+    return render(request, 'authApp/desigantion_list.html', context)
+
+
+@login_required
 def facility_partner_list (request):
     user = request.user
     partner = Partner.objects.all()

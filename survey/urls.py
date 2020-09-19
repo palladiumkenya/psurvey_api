@@ -13,6 +13,7 @@ urlpatterns = [
     path('web/add-question/<int:q_id>/', views.add_question, name='add-question'),
     path('web/edit-question/<int:q_id>/', views.edit_question, name='edit-question'),
     path('web/question-list/<int:q_id>/', views.question_list, name='questions'),
+    path('resp-chart/', views.resp_chart, name='all-resp-chart'),
 
     #Api urls
     path('api/questionnaire/all/', views.all_questionnaire_api, name='questionnaire_api'),
