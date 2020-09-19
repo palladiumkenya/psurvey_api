@@ -1,0 +1,123 @@
+{% extends 'survey/base.html' %}
+{% block title %}
+    Dashboard
+{% endblock %}
+{% block breadcrumb %}
+    <h4 class="h4 text-white d-inline-block mb-0">Reports</h4>
+    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i></a></li>
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}">Reports</a></li>
+            <li class="breadcrumb-item active" aria-current="page">Reports</li>
+        </ol>
+    </nav>
+{% endblock %}
+{% block body %}
+
+    <h3 class="h3">Total Responses</h3>
+    <div class="card card-stats">
+        <!-- Card body -->
+        <div class="card-body">
+            <div class="row">
+                <div class="col">
+                    <h5 class="card-title text-uppercase text-muted mb-0">Total Responses</h5>
+                    <span class="h2 font-weight-bold mb-0">{{ aq.count }}</span>
+                    <div class="counter h2 font-weight-bold mb-0" data-target="{{ resp.count }}">0</div>
+                </div>
+                <div class="col-auto">
+                    <div class="icon icon-shape bg-gradient-green text-white rounded-circle shadow">
+                        <i class="ni ni-atom"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    </div>
+    </div>
+    </div>
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-header bg-transparent">
+                    <div class="row align-items-center">
+                        <div class="col">
+                            <h6 class="text-uppercase text-muted ls-1 mb-1">Performance</h6>
+                            <h5 class="h3 mb-0">Total responses for question</h5>
+                            <p class="text-center">QUESTION: {{ quest.question }}</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-body">
+                    {% if quest.question_type != 1 %}
+                    <!-- Chart -->
+                    <div class="chart" id="container" style="width: 75%;">
+                        <canvas id="pie-chart"></canvas>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script>
+        const counters = document.querySelectorAll('.counter');
+        const speed = 200; // The lower the slower
+
+        counters.forEach(counter => {
+            const updateCount = () => {
+                const target = +counter.getAttribute('data-target');
+                const count = +counter.innerText;
+
+                const inc = target / speed;
+
+                if (count < target) {
+                    // Add inc to count and output in counter
+                    counter.innerText = Math.ceil(count + inc);
+                    // Call function every ms
+                    setTimeout(updateCount, 1);
+                } else {
+                    counter.innerText = target;
+                }
+            };
+
+            updateCount();
+        });
+
+    </script>
+    <script>
+
+        var config = {
+            type: 'pie',
+            data: {
+                datasets: [{
+                    data: {{ data|safe }},
+                    backgroundColor: [
+                        '#be2626', '#417e20', '#A9A9A9', '#bc890c', '#D3D3D3'
+                    ],
+                    label: 'Population'
+                }],
+                labels: {{ labels|safe }}
+            },
+            options: {
+                legend: {
+                    display: true,
+                    position: 'right',
+                    labels: {
+                        fontColor: "#000080",
+                    }
+                },
+                responsive: true
+            }
+        };
+
+        window.onload = function () {
+            var ctx = document.getElementById('pie-chart').getContext('2d');
+            window.myPie = new Chart(ctx, config);
+        };
+
+    </script>
+{% endblock %}

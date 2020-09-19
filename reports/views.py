@@ -1,0 +1,44 @@
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import render
+from django.db.models import Count
+from survey.models import *
+
+
+@login_required
+def index (request, q_id):
+    user =  request.user
+    question = Question.objects.get(id=q_id)
+    resp = Response.objects.filter(question_id=q_id)
+    print(resp.count())
+    labels = []
+    data = []
+
+    queryset = Response.objects.filter(question_id=q_id).values('answer__option').annotate(count=Count('answer'))
+
+    for city in queryset:
+        labels.append(city['answer__option'])
+        data.append(city['count'])
+
+    context = {
+        'u': user,
+        'quest': question,
+        'resp': resp,
+        'labels': labels,
+        'data': data,
+    }
+    return render(request, 'reports/response_report.html', context)
+
+
+def pie_chart (request):
+    labels = []
+    data = []
+
+    queryset = Response.objects.order_by('question')[:5]
+    for city in queryset:
+        labels.append(city.answer.option)
+        data.append(city.id)
+
+    return render(request, 'pie_chart.html', {
+        'labels': labels,
+        'data': data,
+    })

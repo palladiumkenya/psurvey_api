@@ -33,6 +33,8 @@ ALLOWED_HOSTS = ['*']
 INSTALLED_APPS = [
     'authApp',
     'survey',
+    'errorPages',
+    'reports',
 
     'django.contrib.admin',
     'django.contrib.auth',
