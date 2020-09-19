@@ -3,7 +3,9 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction, IntegrityError
-from django.http import HttpResponse, Http404
+from django.db.models import Count, DateField
+from django.db.models.functions import Cast
+from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render
 from rest_framework import status
 from rest_framework.response import Response as Res
@@ -179,6 +181,22 @@ def index (request):
             'resp': resp,
         }
         return render(request, 'survey/dashboard.html', context)
+
+
+def resp_chart(request):
+    labels = []
+    data = []
+    queryset = Response.objects.values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+
+    print(queryset)
+    for entry in queryset:
+        labels.append(entry['created_at'])
+        data.append(entry['count'])
+
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    })
 
 
 @login_required
