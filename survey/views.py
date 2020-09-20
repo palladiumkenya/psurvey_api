@@ -64,6 +64,8 @@ def list_question_api (request):
 @permission_classes([IsAuthenticated])
 def start_questionnaire (request):
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
+    if quest.count() == 0:
+        return Res({"message": "No questions"}, status=status.HTTP_400_BAD_REQUEST)
     for q in quest:
         serializer = QuestionSerializer(q)
         queryset = Answer.objects.filter(question_id=q.id)
