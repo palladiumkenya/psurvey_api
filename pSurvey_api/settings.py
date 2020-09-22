@@ -11,8 +11,11 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 from pathlib import Path
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
+from docutils.nodes import term
+
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 
@@ -45,6 +48,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -77,6 +81,19 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
+
+# Celery
+CELERY_BROKER_URL = 'amqp://localhost'
+CELERY_TIMEZONE = 'Africa/Nairobi'
+CELERY_BEAT_SCHEDULE = {
+ 'send-summary-every-hour': {
+       'task': 'survey.tasks.quest_active_check',
+        # There are 4 ways we can handle time, read further
+       'schedule': 20.0,
+        # If you're using any arguments
+    },
+    # Executes every Friday at 4pm
+}
 
 
 # Database

@@ -3,7 +3,7 @@ from datetime import date
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.db import transaction, IntegrityError
-from django.db.models import Count, DateField
+from django.db.models import Count
 from django.db.models.functions import Cast
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render
@@ -164,7 +164,8 @@ def index (request):
         }
         return render(request, 'survey/dashboard.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__user=user)
+        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        print(fac)
         quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                       ).values_list('questionnaire').distinct()
         aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True),
@@ -186,9 +187,16 @@ def index (request):
 def resp_chart(request):
     labels = []
     data = []
-    queryset = Response.objects.values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+    if request.user.access_level.id == 3:
+        queryset = Response.objects.values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+    if request.user.access_level.id == 2:
+        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                      ).values_list('questionnaire').distinct()
 
-    print(queryset)
+        queryset = Response.objects.filter(question__questionnaire__in=quest).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+
+
     for entry in queryset:
         labels.append(entry['created_at'])
         data.append(entry['count'])
@@ -239,7 +247,7 @@ def new_questionnaire (request):
         }
         return render(request, 'survey/new_questionnaire.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__user=user)
+        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True))
         context = {
             'u': u,
@@ -307,7 +315,7 @@ def edit_questionnaire (request, q_id):
         }
         return render(request, 'survey/edit_questionnaire.html', context)
     if user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__user=user)
+        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
         try:
             question = Questionnaire.objects.get(id=q_id)
@@ -345,7 +353,7 @@ def questionnaire (request):
         }
         return render(request, 'survey/questionnaires.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__user=user)
+        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                       ).values_list('questionnaire_id').distinct()
         quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
@@ -385,6 +393,12 @@ def add_question (request, q_id):
             except IntegrityError:
                 transaction.savepoint_rollback(trans_one)
                 return HttpResponse("error")
+    if user.access_level.id ==2 and user.access_level.id != Questionnaire.objects.get(id=q_id).created_by.access_level.id:
+        raise PermissionDenied
+    try:
+        Questionnaire.objects.get(id=q_id)
+    except Questionnaire.DoesNotExist:
+        raise Http404('Questionnaire does not exist')
     context = {
         'u': u,
         'questionnaire': q_id
@@ -404,7 +418,7 @@ def edit_question (request, q_id):
     except Question.DoesNotExist:
         raise Http404('Question does not exist')
     except Questionnaire.DoesNotExist:
-        raise Http404('Question does not exist')
+        raise Http404('Questionnaire does not exist')
     if user.access_level.id == 2:
         if Questionnaire.objects.get(id=q.questionnaire_id).created_by.access_level.id == 3:
             raise PermissionDenied

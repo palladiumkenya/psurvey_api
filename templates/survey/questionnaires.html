@@ -147,6 +147,14 @@
                                                        href="{% url 'questions' q_id=foo.id %}">Edit
                                                         Questions</a>
                                                     <a class="dropdown-item" href="#">Something else here</a>
+                                                {% elif foo.created_by.access_level.id != u.access_level.id %}
+                                                    <a class="dropdown-item disabled"
+                                                       href="{% url 'edit-questionnaires' q_id=foo.id %}">Edit
+                                                        Questionnaire</a>
+                                                    <a class="dropdown-item disabled"
+                                                       href="{% url 'questions' q_id=foo.id %}">Edit
+                                                        Questions</a>
+                                                    <a class="dropdown-item" href="#">Something else here</a>
                                                 {% else %}
                                                     <a class="dropdown-item"
                                                        href="{% url 'edit-questionnaires' q_id=foo.id %}">Edit
