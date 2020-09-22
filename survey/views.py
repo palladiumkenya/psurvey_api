@@ -143,7 +143,7 @@ def check_answer_algo(ser):
                 end.save()
                 return Res({
                     "success": True,
-                    "Message": "Questionnaire complete, Thank You👌!"
+                    "Message": "Questionnaire complete, Thank You!"
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
