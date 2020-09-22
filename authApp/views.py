@@ -1,6 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from django.core.exceptions import PermissionDenied
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -66,7 +67,6 @@ def web_login (request):
         if form.is_valid():
             clean = form.cleaned_data
             user = authenticate(username=clean['msisdn'], password=clean['password'])
-            print(user)
             if user is not None:
                 if user.is_active:
                     if user.access_level.id != 1:
@@ -87,7 +87,7 @@ def web_login (request):
 def designation_list (request):
     user = request.user
     if request.user.access_level.id != 3:
-        return PermissionError
+        raise PermissionDenied
     designation = Designation.objects.all()
     context = {
         'u': user,
@@ -176,8 +176,28 @@ def register_partner (request):
 @login_required
 def profile (request):
     u = request.user
+    if u.access_level.id == 2:
+        partner = Partner.objects.get(id=Partner_User.objects.get(user=u).name_id)
+    else:
+        partner = 1
+    if request.method == "POST":
+        f_name = request.POST.get('f_name')
+        l_name = request.POST.get('l_name')
+        email = request.POST.get('email')
+        msisdn = request.POST.get('msisdn')
+        try:
+            user = Users.objects.get(id=u.id)
+            user.f_name = f_name
+            user.l_name = l_name
+            user.email = email
+            user.msisdn = msisdn
+            user.save()
+        except IntegrityError:
+            return 'error'
+
     context = {
         'u': u,
+        'p': partner,
     }
     return  render(request, 'authApp/profile.html', context)
 
