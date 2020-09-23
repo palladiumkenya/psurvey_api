@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from django.http import HttpResponse
 from django.shortcuts import render, redirect
@@ -21,13 +22,21 @@ from .models import *
 from survey.models import *
 
 
-#api
+# api
 @api_view(['GET'])
 def facilities(request):
     if request.method == "GET":
         queryset = Facility.objects.all()
         serializer = FacilitySerializer(queryset, many=True)
         return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def counties(request):
+    if request.method == "GET":
+        queryset = Facility.objects.all().distinct('county')
+        serializer = FacilitySerializer(queryset, many=True)
+        return Res(data=serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -55,13 +64,13 @@ def current_user(request):
         aq = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id,
                                                    questionnaire__is_active=True,
                                                    questionnaire__active_till__gte=date.today()).count()
-        cs = End_Questionnaire.objects.filter(session__started_by=request.user).count(       )
-        return Res({'user': serializer.data, 'Active_questionnaires':aq, 'Completed_surveys': cs}, status=status.HTTP_200_OK)
+        cs = End_Questionnaire.objects.filter(session__started_by=request.user).count()
+        return Res({'user': serializer.data, 'Active_questionnaires': aq, 'Completed_surveys': cs},
+                   status=status.HTTP_200_OK)
 
 
 # Web
-def web_login (request):
-
+def web_login(request):
     if request.method == 'POST':
         form = LoginForm(request.POST)
         if form.is_valid():
@@ -84,7 +93,7 @@ def web_login (request):
 
 
 @login_required
-def designation_list (request):
+def designation_list(request):
     user = request.user
     if request.user.access_level.id != 3:
         raise PermissionDenied
@@ -97,46 +106,59 @@ def designation_list (request):
 
 
 @login_required
-def facility_partner_list (request):
+def facility_partner_list(request):
     user = request.user
-    partner = Partner.objects.all()
+    partner = Partner.objects.all().order_by('-created_at')
+    page = request.GET.get('page', 1)
+    paginator = Paginator(partner, 10)
+    try:
+        partner = paginator.page(page)
+    except PageNotAnInteger:
+        partner = paginator.page(1)
+    except EmptyPage:
+        partner = paginator.page(paginator.num_pages)
     context = {
         'u': user,
-        'partner': partner
+        'partner': partner,
+        'paginator': paginator,
     }
     return render(request, 'authApp/partner_facility_list.html', context)
 
 
 @login_required
-def facility_partner_link (request):
+def facility_partner_link(request):
     user = request.user
     par_fac = Partner_Facility.objects.all()
     facilities = Facility.objects.all().exclude(id__in=par_fac.values_list('facility_id', flat=True))
 
     if request.method == 'POST':
         fac = request.POST.getlist('facility')
-        partner = request.POST.get('partner-user')
+        partner = request.POST.get('partner')
 
+        trans_one = transaction.savepoint()
         try:
+            create_part = Partner.objects.create(name=partner, created_by=user)
+            create_part.save()
             for i in fac:
-                p_user = Partner_Facility.objects.create(facility_id=i, created_by=user, partner_id=partner)
+                p_user = Partner_Facility.objects.create(facility_id=i, created_by=user, partner_id=create_part.pk)
                 p_user.save()
         except IntegrityError:
+            transaction.savepoint_rollback(trans_one)
             return HttpResponse("error")
 
-    partner_users = Partner.objects.filter(user__access_level_id=2)
+    partner_users = Partner.objects.all()
     context = {
         'u': user,
         'fac': facilities,
-        'p_users':partner_users,
+        'p_users': partner_users,
     }
     return render(request, 'authApp/new_partner_link.html', context)
 
 
 @login_required
-def register_partner (request):
+def register_partner(request):
     u = request.user
-    facilities = Facility.objects.all()
+    facilities = Facility.objects.exclude(id__in=Partner_Facility.objects.values_list('facility_id', flat=True))
     if request.method == 'POST':
         trans_one = transaction.savepoint()
         f_name = request.POST.get('f_name')
@@ -145,7 +167,7 @@ def register_partner (request):
         msisdn = request.POST.get('msisdn')
         password = request.POST.get('password')
         re_password = request.POST.get('re_password')
-        partner = request.POST.get('partner')
+        partner = request.POST.get('partner-user')
         if password != re_password:
             return HttpResponse("Password error")
         user = Users.objects.create_user(msisdn=msisdn, password=password, email=email)
@@ -156,25 +178,63 @@ def register_partner (request):
         user.save()
         try:
             if user.pk:
-                admin = Partner.objects.create(name=partner, user=user, created_by=u)
+                admin = Partner_User.objects.create(name_id=partner, user=user, created_by=u)
                 admin.save()
         except IntegrityError:
-                transaction.savepoint_rollback(trans_one)
-                return HttpResponse("error")
+            transaction.savepoint_rollback(trans_one)
+            return HttpResponse("error")
 
-    partner_users = Partner.objects.filter(user__access_level_id=2)
+    partner_users = Partner.objects.all()
     for p in partner_users:
-        print(p.user)
+        print(p)
     context = {
         'u': u,
         'fac': facilities,
-        'p_users':partner_users,
+        'p_users': partner_users,
     }
     return render(request, 'authApp/new_partner_link.html', context)
 
 
+def edit_partner(request, p_id):
+    user = request.user
+    if user.access_level.id == 2:
+        raise PermissionDenied
+    part = Partner.objects.get(id=p_id)
+    par_fac = Partner_Facility.objects.all()
+    facilities = Facility.objects.all().exclude(id__in=par_fac.values_list('facility_id', flat=True))
+    selected = Facility.objects.filter(
+        id__in=Partner_Facility.objects.filter(partner=part).values_list('facility_id', flat=True))
+
+    if request.method == 'POST':
+        fac = request.POST.getlist('facility')
+        partner = request.POST.get('partner')
+
+        trans_one = transaction.savepoint()
+        try:
+            part.name = partner
+            part.save()
+            fac_init = Partner_Facility.objects.filter(partner=part)
+            fac_init.delete()
+            for i in fac:
+                p_user = Partner_Facility.objects.create(facility_id=i, created_by=user, partner_id=part.pk)
+                p_user.save()
+        except IntegrityError:
+            transaction.savepoint_rollback(trans_one)
+            return HttpResponse("error")
+
+    context = {
+        'u': user,
+        'selected': selected,
+        'fac': facilities,
+        'pa': part,
+        'p_id': p_id,
+
+    }
+    return render(request, 'authApp/edit_partner_link.html', context)
+
+
 @login_required
-def profile (request):
+def profile(request):
     u = request.user
     if u.access_level.id == 2:
         partner = Partner.objects.get(id=Partner_User.objects.get(user=u).name_id)
@@ -199,7 +259,7 @@ def profile (request):
         'u': u,
         'p': partner,
     }
-    return  render(request, 'authApp/profile.html', context)
+    return render(request, 'authApp/profile.html', context)
 
 
 def logout_request(request):

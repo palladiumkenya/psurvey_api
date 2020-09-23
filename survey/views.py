@@ -1,7 +1,9 @@
+import json
 from datetime import date
 
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.serializers import serialize
 from django.db import transaction, IntegrityError
 from django.db.models import Count
 from django.db.models.functions import Cast
@@ -25,7 +27,7 @@ def all_questionnaire_api(request):
     list = []
     for i in quest:
         queryset = Questionnaire.objects.filter(id=i.questionnaire.id)
-        serializer =  QuestionnaireSerializer(queryset, many=True)
+        serializer = QuestionnaireSerializer(queryset, many=True)
         list.append(serializer.data[0])
     print(list)
     return Res({"data": list}, status.HTTP_200_OK)
@@ -33,18 +35,18 @@ def all_questionnaire_api(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def active_questionnaire_api (request):
+def active_questionnaire_api(request):
     quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
 
     queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True,
                                             active_till__gte=date.today())
-    serializer =  QuestionnaireSerializer(queryset, many=True)
+    serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def all_question_api (request):
+def all_question_api(request):
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])
     serializer = QuestionSerializer(quest, many=True)
 
@@ -53,7 +55,7 @@ def all_question_api (request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def list_question_api (request):
+def list_question_api(request):
     quest = Answer.objects.filter(question_id=request.data['question_id'])
     serializer = QuestionResponseSerializer(quest, many=True)
 
@@ -62,7 +64,7 @@ def list_question_api (request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def start_questionnaire (request):
+def start_questionnaire(request):
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
     for q in quest:
         serializer = QuestionSerializer(q)
@@ -81,7 +83,7 @@ def start_questionnaire (request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def answer_question (request):
+def answer_question(request):
     q = Question.objects.get(id=request.data['question'])
 
     if q.question_type == 3:
@@ -147,24 +149,39 @@ def check_answer_algo(ser):
 
 
 # web
+def get_fac(request):
+    if request.method == "POST":
+        county_list = request.POST.getlist('county_list[]')
+        print(request.POST)
+        fac = Facility.objects.filter(county__in=county_list)
+
+        serialized = serialize('json', fac)
+        obj_list = json.loads(serialized)
+
+        return HttpResponse(json.dumps(obj_list), content_type="application/json")
+
+
 @login_required
-def index (request):
+def index(request):
     user = request.user
     if user.access_level.id == 3:
         fac = Facility.objects.all()
         quest = Questionnaire.objects.all()
         aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
-        resp = End_Questionnaire.objects.all()
+        resp = End_Questionnaire.objects.filter()
+        queryset = Facility.objects.all().distinct('county')
         context = {
             'u': user,
             'fac': fac,
             'quest': quest,
             'aq': aq,
             'resp': resp,
+            'county': queryset,
         }
         return render(request, 'survey/dashboard.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         print(fac)
         quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                       ).values_list('questionnaire').distinct()
@@ -185,17 +202,35 @@ def index (request):
 
 
 def resp_chart(request):
+    start = request.POST.get('start_date')
+    end = request.POST.get('end_date')
+    county = request.POST.getlist('co[]', '')
+    facilities = request.POST.getlist('fac[]', '')
+    print(request.POST)
+    if facilities == '' and county == '':
+        facilities = Facility.objects.values_list('id', flat=True)
+    elif facilities == '':
+        facilities = Facility.objects.filter(county__in=county).values_list('id', flat=True)
+    if county == '':
+        county = Facility.objects.all().distinct('county').values_list('county', flat=True)
     labels = []
     data = []
     if request.user.access_level.id == 3:
-        queryset = Response.objects.values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+        queryset = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility_id__in=facilities).values_list('questionnaire_id', flat=True),
+
+        ).filter(
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility__county__in=county).values_list('questionnaire_id', flat=True)).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
     if request.user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                       ).values_list('questionnaire').distinct()
 
-        queryset = Response.objects.filter(question__questionnaire__in=quest).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
-
+        queryset = Response.objects.filter(question__questionnaire__in=quest).values('created_at').annotate(
+            count=Count('created_at')).order_by('created_at')
 
     for entry in queryset:
         labels.append(entry['created_at'])
@@ -208,7 +243,7 @@ def resp_chart(request):
 
 
 @login_required
-def new_questionnaire (request):
+def new_questionnaire(request):
     user = request.user
     u = user
     if request.method == 'POST':
@@ -217,7 +252,6 @@ def new_questionnaire (request):
         desc = request.POST.get('description')
         dateTill = request.POST.get('date-till')
         isActive = request.POST.get('isActive')
-
 
         if isActive == "inactive":
             isActive = False
@@ -247,7 +281,8 @@ def new_questionnaire (request):
         }
         return render(request, 'survey/new_questionnaire.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True))
         context = {
             'u': u,
@@ -257,7 +292,7 @@ def new_questionnaire (request):
 
 
 @login_required
-def edit_questionnaire (request, q_id):
+def edit_questionnaire(request, q_id):
     user = request.user
     u = user
     if request.method == 'POST':
@@ -267,7 +302,6 @@ def edit_questionnaire (request, q_id):
         dateTill = request.POST.get('date-till')
         isActive = request.POST.get('isActive')
 
-
         if isActive == "inactive":
             isActive = False
         else:
@@ -276,10 +310,10 @@ def edit_questionnaire (request, q_id):
         trans_one = transaction.savepoint()
 
         create_quest = Questionnaire.objects.get(id=q_id)
-        create_quest.name=name
-        create_quest.is_active=isActive
-        create_quest.description=desc
-        create_quest.active_till=dateTill
+        create_quest.name = name
+        create_quest.is_active = isActive
+        create_quest.description = desc
+        create_quest.active_till = dateTill
 
         create_quest.save()
 
@@ -315,7 +349,8 @@ def edit_questionnaire (request, q_id):
         }
         return render(request, 'survey/edit_questionnaire.html', context)
     if user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
         try:
             question = Questionnaire.objects.get(id=q_id)
@@ -338,7 +373,7 @@ def edit_questionnaire (request, q_id):
 
 
 @login_required
-def questionnaire (request):
+def questionnaire(request):
     user = request.user
     u = user
     if user.access_level.id == 3:
@@ -353,9 +388,10 @@ def questionnaire (request):
         }
         return render(request, 'survey/questionnaires.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                      ).values_list('questionnaire_id').distinct()
+                                                  ).values_list('questionnaire_id').distinct()
         quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
         count = quest.count()
 
@@ -369,31 +405,33 @@ def questionnaire (request):
 
 
 @login_required
-def add_question (request, q_id):
+def add_question(request, q_id):
     user = request.user
     u = user
     if request.method == 'POST':
         question = request.POST.get('question')
-        q_type = request.POST.get('q_type') #For q_type 1 is opened ended 2 Radio 3 is Checkbox
+        q_type = request.POST.get('q_type')  # For q_type 1 is opened ended 2 Radio 3 is Checkbox
         answers = request.POST.get('answers')
         if q_type == '1':
             answers = "Open Text"
         answers_list = answers.split(',')
-        print(question,q_type, answers_list)
+        print(question, q_type, answers_list)
 
-        q_save = Question.objects.create(question=question, question_type=q_type, created_by=user , questionnaire_id=q_id)
+        q_save = Question.objects.create(question=question, question_type=q_type, created_by=user,
+                                         questionnaire_id=q_id)
         trans_one = transaction.savepoint()
         question_id = q_save.pk
 
         if question_id:
             try:
                 for f in answers_list:
-                    fac_save = Answer.objects.create(question_id=question_id, created_by=user ,option=f)
+                    fac_save = Answer.objects.create(question_id=question_id, created_by=user, option=f)
                     fac_save.save()
             except IntegrityError:
                 transaction.savepoint_rollback(trans_one)
                 return HttpResponse("error")
-    if user.access_level.id ==2 and user.access_level.id != Questionnaire.objects.get(id=q_id).created_by.access_level.id:
+    if user.access_level.id == 2 and user.access_level.id != Questionnaire.objects.get(
+            id=q_id).created_by.access_level.id:
         raise PermissionDenied
     try:
         Questionnaire.objects.get(id=q_id)
@@ -407,11 +445,11 @@ def add_question (request, q_id):
 
 
 @login_required
-def edit_question (request, q_id):
+def edit_question(request, q_id):
     user = request.user
     try:
         q = Question.objects.get(id=q_id)
-        quest_id =Questionnaire.objects.get(id=q.questionnaire_id).id
+        quest_id = Questionnaire.objects.get(id=q.questionnaire_id).id
         ans = Answer.objects.filter(question=q).values_list('option', flat=True)
         a = ','.join([str(elem) for elem in ans])
         print(a)
@@ -424,13 +462,13 @@ def edit_question (request, q_id):
             raise PermissionDenied
     if request.method == 'POST':
         question = request.POST.get('question')
-        q_type = request.POST.get('q_type') #For q_type 1 is opened ended 2 Radio 3 is Checkbox
+        q_type = request.POST.get('q_type')  # For q_type 1 is opened ended 2 Radio 3 is Checkbox
         answers = request.POST.get('answers')
         if q_type == '1':
             answers = "Open Text"
         answers_list = answers.split(',')
 
-        print(question,q_type, answers_list)
+        print(question, q_type, answers_list)
         trans_one = transaction.savepoint()
 
         q.question = question
@@ -441,7 +479,7 @@ def edit_question (request, q_id):
         try:
             Answer.objects.filter(question=q).delete()
             for f in answers_list:
-                fac_save = Answer.objects.create(question=q, created_by=user ,option=f)
+                fac_save = Answer.objects.create(question=q, created_by=user, option=f)
                 fac_save.save()
         except IntegrityError:
             transaction.savepoint_rollback(trans_one)
@@ -457,7 +495,7 @@ def edit_question (request, q_id):
 
 
 @login_required
-def question_list (request, q_id):
+def question_list(request, q_id):
     user = request.user
     u = user
     if user.access_level.id == 3:
@@ -483,4 +521,3 @@ def question_list (request, q_id):
             'questionnaire': q_id,
         }
         return render(request, 'survey/question_list.html', context)
-

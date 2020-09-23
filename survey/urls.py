@@ -14,6 +14,7 @@ urlpatterns = [
     path('web/edit-question/<int:q_id>/', views.edit_question, name='edit-question'),
     path('web/question-list/<int:q_id>/', views.question_list, name='questions'),
     path('resp-chart/', views.resp_chart, name='all-resp-chart'),
+    path('get/facilities/', views.get_fac),
 
     #Api urls
     path('api/questionnaire/all/', views.all_questionnaire_api, name='questionnaire_api'),
