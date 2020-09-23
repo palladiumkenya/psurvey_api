@@ -1,6 +1,18 @@
 {% extends 'survey/base.html' %}
+{% load static %}
 {% block title %}
     Dashboard
+{% endblock %}
+{% block headscript %}
+    <link href="https://unpkg.com/multiple-select@1.5.2/dist/multiple-select.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/multiple-select@1.5.2/dist/multiple-select.min.js"></script>
+
+    <script type="text/javascript"
+            src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/js/bootstrap-multiselect.js"></script>
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-multiselect/0.9.13/css/bootstrap-multiselect.css"
+          type="text/css"/>
+
 {% endblock %}
 {% block breadcrumb %}
     <h6 class="h2 text-white d-inline-block mb-0">Dashboard</h6>
@@ -95,7 +107,7 @@
     <!-- Page content -->
     <div class="container-fluid mt--6">
     <div class="row">
-        <div class="col-xl-8">
+        <div class="col-xl-12">
             <div class="card">
                 <div class="card-header border-0">
                     <div class="row align-items-center">
@@ -107,10 +119,40 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    <div id="reportrange"
-                         style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
-                        <i class="fa fa-calendar"></i>&nbsp;
-                        <span></span> <i class="fa fa-caret-down"></i>
+                    <div class="row">
+                        <div class="col-xl-4">
+
+                            <label class="form-control-label" for="reportrange">Date Range</label>
+                            <div id="reportrange"
+                                 style="background: #fff; cursor: pointer; padding: 5px 10px; border: 1px solid #ccc; width: 100%">
+                                <i class="ni ni-calendar-grid-58"></i>&nbsp;
+                                <span></span> <i class="fa fa-caret-down"></i>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="county_filt">Counties</label>
+                                <div>
+                                    <select multiple="multiple" class="form-control" name="county" id="county_filt"
+                                            placeholder="Counties" onchange="getcounty()" required>
+                                        {% for foo in county %}
+                                            <option value="{{ foo.county }}">{{ foo.county }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-4">
+                            <div class="form-group">
+                                <label class="form-control-label" for="facility">Facilities</label>
+                                <div>
+                                    <select multiple="multiple" class="form-control" name="facility" id="facility"
+                                            placeholder="Facilities" onchange="county()" required>
+
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -129,9 +171,10 @@
                 </div>
                 <div class="card-body">
                     <!-- Chart -->
-                    <div class="chart">
+                    <div class="chart" id="chart1">
                         <!-- Chart wrapper -->
-                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}" class="chart-canvas"></canvas>
+                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}"
+                                class="chart-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -155,25 +198,46 @@
             </div>
         </div>
     </div>
-
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
+    <script>
+        $(function () {
+            $('select').multipleSelect({
+                multiple: true,
+                multipleWidth: 400,
+                filter: true,
+                filterPlaceholder: 'Search'
+            });
+            {#$(document).ready(function () {#}
+            {#    $('#facility').multiselect();#}
+            {#});#}
+        })
+    </script>
     <script type="text/javascript">
 
-        var start = moment().subtract(29, 'days');
-        var end = moment();
+        let start = moment().subtract(29, 'days');
+        let end = moment();
+        let counties = $('#county_filt');
+        let facilities = $('#facility');
         $(function () {
+            ChartInit();
+            DateRange();
+            getcounty();
+        });
+
+        function DateRange() {
 
             function cb(start, end) {
                 $('#reportrange span').html(start.format('MMMM D, YYYY') + ' - ' + end.format('MMMM D, YYYY'));
             }
 
-            $('#reportrange').daterangepicker({
-                startDate: start,
-                endDate: end,
+            dateRange = $('#reportrange');
+            dateRange.daterangepicker({
+                startDate: moment().subtract(29, 'days'),
+                endDate: moment(),
                 maxDate: moment(),
                 ranges: {
                     'Today': [moment(), moment()],
@@ -183,19 +247,112 @@
                     'This Month': [moment().startOf('month'), moment().endOf('month')],
                     'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
                 }
-            }, cb);
+            }, cb).on("apply.daterangepicker", function (event, picker) {
+                start = dateRange.data("daterangepicker").startDate;
+                end = dateRange.data("daterangepicker").endDate;
+                ChartInit(start, end);
+            });
 
             cb(start, end);
 
+        }
+
+        var pForm = $("#filterform");
+
+        function getCookie(name) {
+            var cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                var cookies = document.cookie.split(';');
+                for (var i = 0; i < cookies.length; i++) {
+                    var cookie = jQuery.trim(cookies[i]);
+                    // Does this cookie string begin with the name we want?
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        var csrftoken = getCookie('csrftoken');
+
+        function csrfSafeMethod(method) {
+            // these HTTP methods do not require CSRF protection
+            return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
+        }
+
+        $.ajaxSetup({
+            beforeSend: function (xhr, settings) {
+                if (!csrfSafeMethod(settings.type) && !this.crossDomain) {
+                    xhr.setRequestHeader("X-CSRFToken", csrftoken);
+                }
+            }
         });
 
-        $(function () {
+        function resetCanvas() {
+            $('#population-chart').remove(); // this is my <canvas> element
+            div = document.querySelector("#chart1");
+            div.insertAdjacentHTML("afterbegin", "<canvas id=\"population-chart\" data-url=\"{% url 'all-resp-chart' %}\"\n" +
+                "                                class=\"chart-canvas\"></canvas>");
 
+            canvas = document.querySelector('#population-chart');
+        }
+
+        function county() {
+            var fac = $('#facility').val()
+            ChartInit();
+        }
+
+        function getcounty() {
+            var county = $('#county_filt').val();
+            console.log(county);
+            $.ajax({
+                url: '/get/facilities/',
+                type: 'POST',
+                datatype: 'json',
+                data: {
+                    county_list: county,
+                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
+                },
+
+                success: function (data) {
+                    $('#facility').empty();
+                    $('#facility').multipleSelect('destroy')
+                    var options = '';
+                    console.log("in success ward");
+                    console.log(data);
+                    $('#facility').html(options);
+                    for (var i = 0; i < data.length; i++) {
+                        var options = '<option value="' + data[i]['pk'] + '">' + data[i].fields['name'] + ' | ' +
+                            data[i].fields['mfl_code'] + ' </option> ';
+                        $('#facility').append(options);
+                    }
+                    $('#facility').multipleSelect('refresh');
+                    ChartInit();
+                }, error: function () {
+                    console.log("in error");
+                    var options = '<option value="" selected disabled></option>';
+                    $('#county').html(options);
+                }
+            });
+        }
+
+        function ChartInit() {
+            resetCanvas();
             var $populationChart = $("#population-chart");
+
             $.ajax({
                 url: $populationChart.data("url"),
+                data: {
+                    start_date: start.format('YYYY-MM-DD'),
+                    end_date: end.format('YYYY-MM-DD'),
+                    co: counties.val(),
+                    fac: facilities.val(),
+                },
+                type: 'POST',
                 success: function (data) {
-
+                    console.log(data)
                     var ctx = $populationChart[0].getContext("2d");
 
                     new Chart(ctx, {
@@ -209,6 +366,14 @@
                         },
                         options: {
                             responsive: true,
+                            tooltips: {
+                                mode: 'index',
+                                intersect: false,
+                            },
+                            hover: {
+                                mode: 'nearest',
+                                intersect: true
+                            },
                             scales: {
                                 yAxes: [{
                                     gridLines: {
@@ -220,11 +385,9 @@
                             },
                         }
                     });
-
                 }
             });
-
-        });
+        }
     </script>
 
 {% endblock %}

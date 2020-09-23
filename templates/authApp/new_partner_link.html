@@ -52,7 +52,7 @@
                                 <label class="form-control-label" for="facility">Facilities</label>
                                 <div>
                                     <select multiple="multiple" class="form-control" name="facility" id="facility"
-                                            placeholder="Facilities" required>
+                                            placeholder="Facilities" onchange="county()" required>
                                         {% for foo in fac %}
                                             <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
                                         {% endfor %}
@@ -289,6 +289,7 @@
             });
 
         });
+
 
 
     </script>

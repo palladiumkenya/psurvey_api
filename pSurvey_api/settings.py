@@ -97,6 +97,13 @@ CELERY_BEAT_SCHEDULE = {
     # Executes every Friday at 4pm
 }
 
+# Pagination
+# PAGINATION_SETTINGS = {
+#     'PAGE_RANGE_DISPLAYED': 1,
+#     'MARGIN_PAGES_DISPLAYED': 1,
+#
+#     'SHOW_FIRST_PAGE_WHEN_INVALID': True,
+# }
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases

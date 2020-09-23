@@ -87,6 +87,7 @@
                             </tbody>
                         </table>
                     </div>
+
                     <div class="card-footer py-4">
                         {% if resp.has_other_pages %}
                             <ul class="pagination justify-content-end mb-0">
@@ -106,17 +107,21 @@
                                     </li>
                                 {% endif %}
                                 {% for i in resp.paginator.page_range %}
-                                    {% if resp.number == i %}
-                                        <li class="page-item active">
-                                            <span class="page-link">{{ i }} <span
+                                    {% if forloop.counter < 6 %}
+                                        {% if resp.number == i %}
+                                            <li class="page-item active">
+                                            <span class="page-link">{{ forloop.counter }} <span
                                                     class="sr-only">(current)</span></span>
-                                        </li>
-                                    {% else %}
-                                        <li class="page-item">
-                                            <a class="page-link" href="?page={{ i }}">{{ i }}</a>
-                                        </li>
+                                            </li>
+                                        {% else %}
+                                            <li class="page-item">
+                                                <a class="page-link"
+                                                   href="?page={{ forloop.counter }}">{{ forloop.counter }}</a>
+                                            </li>
+                                        {% endif %}
                                     {% endif %}
                                 {% endfor %}
+
                                 {% if resp.has_next %}
                                     <li class="page-item">
                                         <a class="page-link" href="?page={{ resp.next_page_number }}">

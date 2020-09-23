@@ -31,6 +31,14 @@ def facilities(request):
         return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
 
 
+@api_view(['GET'])
+def counties(request):
+    if request.method == "GET":
+        queryset = Facility.objects.all().distinct('county')
+        serializer = FacilitySerializer(queryset, many=True)
+        return Res(data=serializer.data, status=status.HTTP_200_OK)
+
+
 @api_view(['POST'])
 def facility_single(request):
     if request.method == "POST":
@@ -112,6 +120,7 @@ def facility_partner_list(request):
     context = {
         'u': user,
         'partner': partner,
+        'paginator': paginator,
     }
     return render(request, 'authApp/partner_facility_list.html', context)
 

@@ -11,6 +11,7 @@ urlpatterns = [
     path('api/facility/single/', views.facility_single),
     path('api/designation/', views.designation),
     path('api/current/user/', views.current_user),
+    path('api/counties/', views.counties),
 
     # Web
     path('web/', views.web_login, name='web-login'),
