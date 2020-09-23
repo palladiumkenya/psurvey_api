@@ -20,6 +20,7 @@ urlpatterns = [
     path('web/facility-partner-link/', views.facility_partner_link, name='facility-partner-link'),
     path('web/designation-list/', views.designation_list, name='designation-list'),
     path('web/register-partner/', views.register_partner, name='register-partner'),
+    path('web/edit-partner/<int:p_id>/', views.edit_partner, name='edit-partner'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()

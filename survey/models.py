@@ -9,7 +9,7 @@ class Questionnaire (models.Model):
     description = models.CharField(max_length=750)
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     active_till = models.DateField(default=datetime.now)
 
     class Meta:
@@ -20,7 +20,7 @@ class Question (models.Model):
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
     question =  models.CharField(max_length=150)
     question_type = models.IntegerField()
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE)
 
 
@@ -30,7 +30,7 @@ class Question (models.Model):
 class Answer (models.Model):
     question= models.ForeignKey(Question, on_delete=models.CASCADE)
     option = models.CharField(max_length=20)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
     created_by = models.ForeignKey(Users, on_delete=models.CASCADE, default=1)
 
     class Meta:
@@ -52,7 +52,7 @@ class Response (models.Model):
     answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
     open_text = models.CharField(max_length=150, blank=True, null=True)
     session = models.ForeignKey(Started_Questionnaire, on_delete=models.CASCADE, default=1)
-    created_at = models.DateField(auto_now=True)
+    created_at = models.DateField(auto_now_add=True)
 
     class Meta:
         db_table = "Responses"
@@ -85,7 +85,7 @@ class Facility_Questionnaire (models.Model):
 class Group (models.Model):
     name = models.CharField(max_length=100)
     description = models.CharField(max_length=200)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Groups"
@@ -94,7 +94,7 @@ class Group (models.Model):
 class Group_Questionnaire (models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Group_Questionnaire"

@@ -86,12 +86,14 @@ WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 CELERY_BROKER_URL = 'amqp://localhost'
 CELERY_TIMEZONE = 'Africa/Nairobi'
 CELERY_BEAT_SCHEDULE = {
- 'send-summary-every-hour': {
+    'send-summary-every-hour': {
        'task': 'survey.tasks.quest_active_check',
-        # There are 4 ways we can handle time, read further
        'schedule': 20.0,
-        # If you're using any arguments
     },
+    'send-notification-on-friday-afternoon': {
+         'task': 'authApp.tasks.send_notification',
+         'schedule': 10,
+        },
     # Executes every Friday at 4pm
 }
 

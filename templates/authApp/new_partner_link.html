@@ -33,7 +33,7 @@
     <!-- Page content -->
     <div class="container-fluid mt--6">
         <div class="row">
-            <div class="col-xl-5 order-xl-2">
+            <div class="col-xl-5 order-xl-1">
                 <div class="card card-profile">
                     <img src="{% static 'authApp/img/theme/img-1-1000x600.jpg' %}" alt="Image placeholder"
                          class="card-img-top">
@@ -42,22 +42,17 @@
                     </div>
                     <div class="card-body pt-0">
                         <form id="link-form" method="post" action="{% url 'facility-partner-link' %}">
-                        {% csrf_token %}
+                            {% csrf_token %}
                             <div class="form-group">
-                                <label class="form-control-label" for="partner-user">Partner level Users</label>
-                                <div>
-                                    <select class="form-control" name="partner-user" id="partner-user" placeholder="Partner User" required>
-                                        {% for foo in p_users %}
-                                            <option value="{{ foo.id }}">{{ foo.user.email }} | {{ foo.user.msisdn }}
-                                                | {{ foo.name }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
+                                <label class="form-control-label" for="partner">Partner Name</label>
+                                <input type="text" id="partner" name="partner" class="form-control"
+                                       placeholder="Partner abc" required>
                             </div>
                             <div class="form-group">
-                                <label class="form-control-label" for="facility">Target Facility</label>
+                                <label class="form-control-label" for="facility">Facilities</label>
                                 <div>
-                                    <select multiple="multiple" class="form-control" name="facility" id="facility" placeholder="Facilities" required>
+                                    <select multiple="multiple" class="form-control" name="facility" id="facility"
+                                            placeholder="Facilities" required>
                                         {% for foo in fac %}
                                             <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
                                         {% endfor %}
@@ -73,11 +68,11 @@
                     </div>
                 </div>
             </div>
-            <div class="col-xl-7 order-xl-1">
+            <div class="col-xl-7 order-xl-2">
                 <div class="card">
                     <!-- Card header -->
                     <div class="card-header border-0">
-                        <h3 class="mb-0">Create Partner Account</h3>
+                        <h3 class="mb-0">Create Partner User Account</h3>
                     </div>
                     <div class="card-body">
                         <form class="form-group" id="new_partner" method="post" action="{% url 'register-partner' %}">
@@ -135,16 +130,20 @@
                                 </div>
                                 <hr class="my-4"/>
                                 <h6 class="heading-small text-muted mb-4">Partner information</h6>
+                                <div class="form-group">
+                                    <label class="form-control-label" for="partner-user">Partner level Users</label>
                                 <div class="row">
                                     <div class="col-lg-6">
-                                        <div class="form-group">
-                                            <label class="form-control-label" for="partner">Partner Name</label>
-                                            <input type="text" id="partner" name="partner" class="form-control"
-                                                   placeholder="Partner abc" required>
-                                        </div>
+                                        <select class="form-control" name="partner-user" id="partner-user"
+                                                placeholder="Partner User" required>
+                                            {% for foo in p_users %}
+                                                <option value="{{ foo.id }}">{{ foo.name }}</option>
+                                            {% endfor %}
+                                        </select>
                                     </div>
-
                                 </div>
+                                </div>
+
 
                             </div>
                             <hr class="my-4"/>
@@ -155,12 +154,12 @@
                         </form>
                     </div>
                     <!-- Card footer -->
-                        <nav aria-label="...">
-                        </nav>
-                    </div>
+                    <nav aria-label="...">
+                    </nav>
                 </div>
             </div>
         </div>
+    </div>
     </div>
 
 {% endblock %}
