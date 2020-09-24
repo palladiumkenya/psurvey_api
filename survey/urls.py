@@ -14,6 +14,7 @@ urlpatterns = [
     path('web/edit-question/<int:q_id>/', views.edit_question, name='edit-question'),
     path('web/question-list/<int:q_id>/', views.question_list, name='questions'),
     path('resp-chart/', views.resp_chart, name='all-resp-chart'),
+    path('trend-chart/', views.trend_chart, name='trend-chart'),
     path('get/facilities/', views.get_fac),
 
     #Api urls
@@ -21,8 +22,9 @@ urlpatterns = [
     path('api/questionnaire/active/', views.active_questionnaire_api, name='active_questionnaire_api'),
     path('api/questions/all/', views.all_question_api, name='all_question_api'),
     path('api/questions/list/', views.list_question_api, name='list_question_api'),
-    path('api/questionnaire/start/', views.start_questionnaire, name='provide_consent_api'),
+    path('api/questionnaire/start/', views.get_consent, name='provide_consent_api'),
     path('api/questions/answer/', views.answer_question, name='provide_response_api'),
+    path('api/questions/answer/<int:q_id>/', views.start_questionnaire_new, name='provide_response_one_api'),
 
 ]
 urlpatterns += staticfiles_urlpatterns()

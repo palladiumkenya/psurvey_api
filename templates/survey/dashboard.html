@@ -173,8 +173,7 @@
                     <!-- Chart -->
                     <div class="chart" id="chart1">
                         <!-- Chart wrapper -->
-                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}"
-                                class="chart-canvas"></canvas>
+                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}" class="chart-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -185,14 +184,14 @@
                     <div class="row align-items-center">
                         <div class="col">
                             <h6 class="text-uppercase text-muted ls-1 mb-1">Performance</h6>
-                            <h5 class="h3 text-white mb-0">Questionnaire Performance</h5>
+                            <h5 class="h3 text-white mb-0">Responses Performance</h5>
                         </div>
                     </div>
                 </div>
                 <div class="card-body">
                     <!-- Chart -->
-                    <div class="chart">
-                        <canvas id="chart-bars" class="chart-canvas"></canvas>
+                    <div class="chart" id="chart2">
+                        <canvas id="chart-bar" data-url={% url 'trend-chart' %}"" class="chart-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -297,6 +296,12 @@
                 "                                class=\"chart-canvas\"></canvas>");
 
             canvas = document.querySelector('#population-chart');
+            $('#chart-bar').remove(); // this is my <canvas> element
+            div = document.querySelector("#chart2");
+            div.insertAdjacentHTML("afterbegin", "<canvas id=\"chart-bar\" data-url=\"{% url 'trend-chart' %}\"\n" +
+                "                                class=\"chart-canvas\"></canvas>");
+
+            canvas = document.querySelector('#population-chart');
         }
 
         function county() {
@@ -341,7 +346,7 @@
         function ChartInit() {
             resetCanvas();
             var $populationChart = $("#population-chart");
-
+            var $trendChart = $('#chart-bar');
             $.ajax({
                 url: $populationChart.data("url"),
                 data: {
@@ -385,6 +390,32 @@
                             },
                         }
                     });
+                }
+            });
+            $.ajax({
+                url: $trendChart.data("url"),
+                data: {
+                    start_date: start.format('YYYY-MM-DD'),
+                    end_date: end.format('YYYY-MM-DD'),
+                    co: counties.val(),
+                    fac: facilities.val(),
+                },
+                type: 'POST',
+                success: function (data) {
+                    console.log(data)
+                    new Chart($trendChart, {
+                        type: 'bar',
+                        data: {
+                            labels: data.labels,
+                            datasets: [{
+                                label: 'Responses',
+                                data: data.data
+                            }]
+                        }
+                    });
+
+                    // Save to jQuery object
+                    $chart.data('chart', ordersChart);
                 }
             });
         }
