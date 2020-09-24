@@ -1,7 +1,7 @@
 import json
 from datetime import date
 
-from dateutil.relativedelta import relativedelta
+#from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.serializers import serialize
@@ -80,7 +80,7 @@ def get_consent(request):
                                                    firstname=request.data['first_name'])
     session.save()
     return JsonResponse({
-        'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(a_id),
+        'link': 'http://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
@@ -149,7 +149,7 @@ def check_answer_algo(ser):
                 queryset = Answer.objects.filter(question=next_)
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
-                    'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(next_.id),
+                    'link': 'http://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     "session_id": ser.data['session']
                 })
                 # return Res({
@@ -324,7 +324,7 @@ def trend_chart(request):
 
     while start <= end:
         result.append(start.strftime('%B')+ '-' + start.strftime('%y'))
-        start += relativedelta(months=1)
+#        start += relativedelta(months=1)
     if not end.strftime('%B')+ '-' + end.strftime('%y') in result:
         result.append(end.strftime('%B')+ '-' + end.strftime('%y'))
 
