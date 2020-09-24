@@ -1,14 +1,15 @@
 import json
 from datetime import date
 
+from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.serializers import serialize
 from django.db import transaction, IntegrityError
 from django.db.models import Count
-from django.db.models.functions import Cast
+from django.db.models.functions import Cast, TruncMonth
 from django.http import HttpResponse, Http404, JsonResponse
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from rest_framework import status
 from rest_framework.response import Response as Res
 from rest_framework.decorators import api_view, permission_classes
@@ -64,12 +65,12 @@ def list_question_api(request):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
-def start_questionnaire(request):
+def get_consent(request):
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
+    a_id = 0
     for q in quest:
-        serializer = QuestionSerializer(q)
-        queryset = Answer.objects.filter(question_id=q.id)
-        ser = AnswerSerializer(queryset, many=True)
+        a_id =q.id
+
     consent = Patient_Consent.objects.create(questionnaire_id=request.data['questionnaire_id'],
                                              ccc_number=request.data['ccc_number'])
     consent.save()
@@ -78,7 +79,22 @@ def start_questionnaire(request):
                                                    ccc_number=request.data['ccc_number'],
                                                    firstname=request.data['first_name'])
     session.save()
-    return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
+    return JsonResponse({
+        'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(a_id),
+        'session': session.pk
+    })
+    # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def start_questionnaire_new(request, q_id):
+    quest = Question.objects.get(id=q_id)
+    serializer = QuestionSerializer(quest)
+    queryset = Answer.objects.filter(question_id=quest)
+    ser = AnswerSerializer(queryset, many=True)
+
+    return Res({"Question": serializer.data, "Ans": ser.data}, status.HTTP_200_OK)
 
 
 @api_view(['POST'])
@@ -132,12 +148,16 @@ def check_answer_algo(ser):
                 serializer = QuestionSerializer(next_)
                 queryset = Answer.objects.filter(question=next_)
                 ans_ser = AnswerSerializer(queryset, many=True)
-                return Res({
-                    "success": True,
-                    "Question": serializer.data,
-                    "Ans": ans_ser.data,
+                return JsonResponse({
+                    'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(next_.id),
                     "session_id": ser.data['session']
-                }, status.HTTP_200_OK)
+                })
+                # return Res({
+                #     "success": True,
+                #     "Question": serializer.data,
+                #     "Ans": ans_ser.data,
+                #     "session_id": ser.data['session']
+                # }, status.HTTP_200_OK)
             elif next_ == None:
                 end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
                 end.save()
@@ -151,12 +171,21 @@ def check_answer_algo(ser):
 # web
 def get_fac(request):
     if request.method == "POST":
-        county_list = request.POST.getlist('county_list[]')
-        print(request.POST)
-        fac = Facility.objects.filter(county__in=county_list)
+        if request.user.access_level.id == 3:
+            county_list = request.POST.getlist('county_list[]')
+            print(request.POST)
+            fac = Facility.objects.filter(county__in=county_list)
 
-        serialized = serialize('json', fac)
-        obj_list = json.loads(serialized)
+            serialized = serialize('json', fac)
+            obj_list = json.loads(serialized)
+        elif request.user.access_level.id == 2:
+            county_list = request.POST.getlist('county_list[]')
+            fac = Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+            fac = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True), county__in=county_list)
+
+            serialized = serialize('json', fac)
+            obj_list = json.loads(serialized)
 
         return HttpResponse(json.dumps(obj_list), content_type="application/json")
 
@@ -189,7 +218,8 @@ def index(request):
                                                    questionnaire__is_active=True,
                                                    questionnaire__active_till__gte=date.today()
                                                    ).values_list('questionnaire').distinct()
-
+        queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
+        print(queryset)
         resp = End_Questionnaire.objects.filter(questionnaire__in=quest)
         context = {
             'u': user,
@@ -197,6 +227,7 @@ def index(request):
             'quest': quest,
             'aq': aq,
             'resp': resp,
+            'county': queryset,
         }
         return render(request, 'survey/dashboard.html', context)
 
@@ -206,7 +237,7 @@ def resp_chart(request):
     end = request.POST.get('end_date')
     county = request.POST.getlist('co[]', '')
     facilities = request.POST.getlist('fac[]', '')
-    print(request.POST)
+
     if facilities == '' and county == '':
         facilities = Facility.objects.values_list('id', flat=True)
     elif facilities == '':
@@ -220,22 +251,94 @@ def resp_chart(request):
             created_at__gte=start,
             created_at__lte=end,
             question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility_id__in=facilities).values_list('questionnaire_id', flat=True),
-
         ).filter(
             question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility__county__in=county).values_list('questionnaire_id', flat=True)).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
     if request.user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
-        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                      ).values_list('questionnaire').distinct()
+        quest = Facility_Questionnaire.objects.filter(
+            facility__in=fac.values_list('facility', flat=True),
+            facility_id__in=facilities, facility__county__in=county).values_list('questionnaire',flat=True).distinct('questionnaire')
+        print('sssssssssss',quest)
 
-        queryset = Response.objects.filter(question__questionnaire__in=quest).values('created_at').annotate(
-            count=Count('created_at')).order_by('created_at')
+        queryset = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            question__questionnaire__in=quest,
+        ).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
 
     for entry in queryset:
         labels.append(entry['created_at'])
         data.append(entry['count'])
 
+    return JsonResponse(data={
+        'labels': labels,
+        'data': data,
+    })
+
+
+def trend_chart(request):
+    start = request.POST.get('start_date')
+    end = request.POST.get('end_date')
+    county = request.POST.getlist('co[]', '')
+    facilities = request.POST.getlist('fac[]', '')
+
+    if facilities == '' and county == '':
+        facilities = Facility.objects.values_list('id', flat=True)
+    elif facilities == '':
+        facilities = Facility.objects.filter(county__in=county).values_list('id', flat=True)
+    if county == '':
+        county = Facility.objects.all().distinct('county').values_list('county', flat=True)
+    labels = []
+    data = []
+    if request.user.access_level.id == 3:
+        re = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility_id__in=facilities).values_list('questionnaire_id', flat=True),
+        ).filter(
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility__county__in=county).values_list('questionnaire_id', flat=True)).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values(
+            'month', 'c').order_by('month')
+
+
+    if request.user.access_level.id == 2:
+
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                      ).values_list('questionnaire').distinct()
+        re = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(
+                facility_id__in=facilities).values_list('questionnaire_id', flat=True),
+            question__questionnaire__in=quest
+        ).filter(
+            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(
+                facility__county__in=county).values_list('questionnaire_id', flat=True)).annotate(
+            month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values(
+            'month', 'c').order_by('month')
+    result = []
+    start = datetime.strptime(start, '%Y-%m-%d').date()
+    end = datetime.strptime(end, '%Y-%m-%d').date()
+
+    while start <= end:
+        result.append(start.strftime('%B')+ '-' + start.strftime('%y'))
+        start += relativedelta(months=1)
+    if not end.strftime('%B')+ '-' + end.strftime('%y') in result:
+        result.append(end.strftime('%B')+ '-' + end.strftime('%y'))
+
+    ste = {}
+
+    for entry in re:
+        labels.append(entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'))
+        ste.update({entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'): entry['c']})
+    for ab in result:
+        if ab in labels:
+            data.append(ste[ab])
+        else:
+            data.append(0)
+    labels = result
     return JsonResponse(data={
         'labels': labels,
         'data': data,
