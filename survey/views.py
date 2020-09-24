@@ -105,7 +105,9 @@ def answer_question(request):
     if q.question_type == 3:
         a = request.data.copy()
         trans_one = transaction.savepoint()
-        for i in a['answer']:
+        b = a['answer'].replace('[', '').replace(' ', '').replace(']', '').split(',')
+        print(b)
+        for i in b:
             a.update({'answer': i})
             serializer = ResponseSerializer(data=a)
             if serializer.is_valid(raise_exception=True):
