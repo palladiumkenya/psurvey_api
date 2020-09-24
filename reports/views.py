@@ -10,9 +10,9 @@ from survey.models import *
 def index (request, q_id):
     user =  request.user
     question = Question.objects.get(id=q_id)
-    respo = Response.objects.filter(question_id=q_id).order_by('-created_at')
+    respo = Response.objects.filter(question_id=q_id).order_by('-id')
     page = request.GET.get('page', 1)
-    paginator = Paginator(respo, 10)
+    paginator = Paginator(respo, 20)
     try:
         resp = paginator.page(page)
     except PageNotAnInteger:

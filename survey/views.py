@@ -321,24 +321,16 @@ def trend_chart(request):
     result = []
     start = datetime.strptime(start, '%Y-%m-%d').date()
     end = datetime.strptime(end, '%Y-%m-%d').date()
+    #
+    # while start <= end:
+    #     result.append(start.strftime('%B')+ '-' + start.strftime('%y'))
+    #     start += relativedelta(months=1)
 
-    while start <= end:
-        result.append(start.strftime('%B')+ '-' + start.strftime('%y'))
-#        start += relativedelta(months=1)
-    if not end.strftime('%B')+ '-' + end.strftime('%y') in result:
-        result.append(end.strftime('%B')+ '-' + end.strftime('%y'))
-
-    ste = {}
 
     for entry in re:
         labels.append(entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'))
-        ste.update({entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'): entry['c']})
-    for ab in result:
-        if ab in labels:
-            data.append(ste[ab])
-        else:
-            data.append(0)
-    labels = result
+        data.append(entry['c'])
+
     return JsonResponse(data={
         'labels': labels,
         'data': data,
