@@ -148,7 +148,6 @@
                                 <div>
                                     <select multiple="multiple" class="form-control" name="facility" id="facility"
                                             placeholder="Facilities" onchange="county()" required>
-
                                     </select>
                                 </div>
                             </div>
@@ -210,9 +209,7 @@
                 filter: true,
                 filterPlaceholder: 'Search'
             });
-            {#$(document).ready(function () {#}
-            {#    $('#facility').multiselect();#}
-            {#});#}
+
         })
     </script>
     <script type="text/javascript">
@@ -301,7 +298,7 @@
             div.insertAdjacentHTML("afterbegin", "<canvas id=\"chart-bar\" data-url=\"{% url 'trend-chart' %}\"\n" +
                 "                                class=\"chart-canvas\"></canvas>");
 
-            canvas = document.querySelector('#population-chart');
+            canvas = document.querySelector('#chart-bar');
         }
 
         function county() {
@@ -357,7 +354,6 @@
                 },
                 type: 'POST',
                 success: function (data) {
-                    console.log(data)
                     var ctx = $populationChart[0].getContext("2d");
 
                     new Chart(ctx, {
@@ -413,9 +409,6 @@
                             }]
                         }
                     });
-
-                    // Save to jQuery object
-                    $chart.data('chart', ordersChart);
                 }
             });
         }

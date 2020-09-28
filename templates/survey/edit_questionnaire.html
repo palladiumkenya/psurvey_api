@@ -1,6 +1,6 @@
 {% extends 'survey/base.html' %}
 {% block title %}
-Edit Questionnaire
+    Edit Questionnaire
 {% endblock %}
 {% block headscript %}
     <link href="https://unpkg.com/multiple-select@1.5.2/dist/multiple-select.min.css" rel="stylesheet">
@@ -38,7 +38,8 @@ Edit Questionnaire
                     <h3 class="mb-0">Edit Questionnaire</h3>
                 </div>
                 <div class="card-body">
-                    <form class="form-group" id="questForm" method="post" action="{% url 'edit-questionnaires' q_id=q.id %}">
+                    <form class="form-group" id="questForm" method="post"
+                          action="{% url 'edit-questionnaires' q_id=q.id %}">
                         {% csrf_token %}
                         <h6 class="heading-small text-muted mb-4">Questionnaire information</h6>
                         <div class="pl-lg-4">
@@ -52,17 +53,31 @@ Edit Questionnaire
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="form-control-label" for="facility">Target Facility</label>
                                         <div>
-                                            <select class="form-control" data-live-search="true" multiple
-                                                    name="facility" id="facility" required>
-                                            {% for f in fac_sel %}
-                                                    <option value="{{ f.id }}" selected="selected">{{ f.name }} | {{ f.mfl_code }}</option>
-                                            {% endfor %}
-                                                {% for foo in fac %}
-                                                    <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
+                                            <label class="form-control-label" for="county_filt">County</label>
+                                            <select multiple="multiple" class="form-control" name="county"
+                                                    id="county_filt"
+                                                    placeholder="Counties" onchange="getcounty()">
+                                                {% for foo in county %}
+                                                    <option value="{{ foo.county }}">{{ foo.county }}</option>
                                                 {% endfor %}
                                             </select>
+                                        </div>
+                                        <div>
+                                            <label class="form-control-label" for="facility">Target Facility</label>
+                                            <div>
+                                                <select class="form-control" data-live-search="true" multiple
+                                                        name="facility" id="facility" required>
+                                                    {% for f in fac_sel %}
+                                                        <option value="{{ f.id }}" selected="selected">{{ f.name }}
+                                                            | {{ f.mfl_code }}</option>
+                                                    {% endfor %}
+                                                    {% for foo in fac %}
+                                                        <option value="{{ foo.id }}">{{ foo.name }}
+                                                            | {{ foo.mfl_code }}</option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -73,11 +88,16 @@ Edit Questionnaire
                                         <label class="form-control-label" for="isActive">Status</label>
                                         <select class="form-control" id="isActive" name="isActive" required>
                                             {% if q.is_active %}
-                                            <option class="custom-control-label" value="active" selected="selected">Active</option>
-                                            <option class="custom-control-label" value="inactive">Inactive</option>
-                                                {% else %}
-                                            <option class="custom-control-label" value="active">Active</option>
-                                            <option class="custom-control-label" value="inactive" selected="selected">Inactive</option>
+                                                <option class="custom-control-label" value="active"
+                                                        selected="selected">Active
+                                                </option>
+                                                <option class="custom-control-label" value="inactive">Inactive
+                                                </option>
+                                            {% else %}
+                                                <option class="custom-control-label" value="active">Active</option>
+                                                <option class="custom-control-label" value="inactive"
+                                                        selected="selected">Inactive
+                                                </option>
                                             {% endif %}
                                         </select>
                                     </div>
@@ -85,13 +105,15 @@ Edit Questionnaire
                                 <div class="col-lg-6">
                                     <div class="form-group">
                                         <label for="date-till" class="form-control-label">Active Till Date</label>
-                                        <input class="form-control" type="date" id="date-till" name="date-till" value="{{ q.active_till|date:"yy-m-d" }}" required>
+                                        <input class="form-control" type="date" id="date-till" name="date-till"
+                                               value="{{ q.active_till|date:"yy-m-d" }}" required>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-group">
                                 <label class="form-control-label" for="description">Description</label>
-                                <textarea class="form-control" id="description" name="description" rows="3" required>{{ q.description }}</textarea>
+                                <textarea class="form-control" id="description" name="description" rows="3"
+                                          required>{{ q.description }}</textarea>
                             </div>
                         </div>
                         <hr class="my-4"/>
@@ -145,7 +167,7 @@ Edit Questionnaire
                     url: endPoint,
                     data: formData,
                     success: function (data) {
-                       if (data == "error") {
+                        if (data == "error") {
                             console.log(qForm[0])
                             Swal.fire({
                                 title: 'Enter all Data Entry!!',
@@ -173,7 +195,6 @@ Edit Questionnaire
             });
 
         });
-
 
 
     </script>

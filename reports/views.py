@@ -1,5 +1,6 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.db.models import Count
 
@@ -38,6 +39,32 @@ def index (request, q_id):
         'data': data,
     }
     return render(request, 'reports/response_report.html', context)
+
+
+def open_end (request, q_id):
+    user = request.user
+    keywords = request.POST.get('keywords')
+    print(keywords)
+    words = keywords.split(',')
+
+    labels = []
+    data = []
+    result = []
+    for word in words:
+        queryset = Response.objects.filter(question_id=q_id, open_text__icontains=word)
+        result.append({'name': word, 'freq': queryset.count()})
+
+    print(result)
+    for re in result:
+        labels.append(re['name'])
+        data.append(re['freq'])
+
+    context = {
+        'labels': labels,
+        'data': data,
+    }
+
+    return JsonResponse(context)
 
 
 def pie_chart (request):
