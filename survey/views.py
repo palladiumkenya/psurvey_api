@@ -1,9 +1,10 @@
 import json
 from datetime import date
 
-#from dateutil.relativedelta import relativedelta
+# from dateutil.relativedelta import relativedelta
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.core.serializers import serialize
 from django.db import transaction, IntegrityError
 from django.db.models import Count
@@ -109,11 +110,11 @@ def answer_question(request):
         b = a['answer'].replace('[', '').replace(' ', '').replace(']', '').split(',')
         print(b)
         for i in b:
+
             a.update({'answer': i})
             serializer = ResponseSerializer(data=a)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-
             else:
                 transaction.savepoint_rollback(trans_one)
                 return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
@@ -144,7 +145,6 @@ def answer_question(request):
                         "Message": "Questionnaire complete, Thank You👌!"
                     }, status.HTTP_200_OK)
         return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
-
 
     else:
         serializer = ResponseSerializer(data=request.data)
@@ -182,6 +182,7 @@ def check_answer_algo(ser):
                     'link': 'http://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     "session_id": ser.data['session']
                 })
+
             elif next_ == None:
                 end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
                 end.save()
@@ -394,8 +395,10 @@ def new_questionnaire(request):
 
     if user.access_level.id == 3:
         facilities = Facility.objects.all()
+        queryset = Facility.objects.all().distinct('county')
         context = {
             'u': u,
+            'county': queryset,
             'fac': facilities,
         }
         return render(request, 'survey/new_questionnaire.html', context)
@@ -403,9 +406,11 @@ def new_questionnaire(request):
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True))
+        queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
         context = {
             'u': u,
             'fac': facilities,
+            'county': queryset,
         }
         return render(request, 'survey/new_questionnaire.html', context)
 
@@ -459,18 +464,21 @@ def edit_questionnaire(request, q_id):
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
         facilities = Facility.objects.all().exclude(id__in=selected.values_list('facility_id', flat=True))
         s = Facility.objects.all().filter(id__in=selected.values_list('facility_id', flat=True))
+        queryset = Facility.objects.all().distinct('county')
 
         context = {
             'u': u,
             'fac': facilities,
             'q': question,
             'fac_sel': s,
+            'county': queryset,
         }
         return render(request, 'survey/edit_questionnaire.html', context)
     if user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
+        queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
         try:
             question = Questionnaire.objects.get(id=q_id)
         except Questionnaire.DoesNotExist:
@@ -487,6 +495,7 @@ def edit_questionnaire(request, q_id):
             'fac': facilities,
             'q': question,
             'fac_sel': s,
+            'county': queryset,
         }
         return render(request, 'survey/edit_questionnaire.html', context)
 
@@ -495,32 +504,98 @@ def edit_questionnaire(request, q_id):
 def questionnaire(request):
     user = request.user
     u = user
-    if user.access_level.id == 3:
-        quest = Questionnaire.objects.all().order_by('-created_at')
-        count = Questionnaire.objects.all().count()
-        fac = Facility.objects.all()
-        context = {
-            'u': u,
-            'quest': quest,
-            'fac': fac,
-            'count': count,
-        }
-        return render(request, 'survey/questionnaires.html', context)
-    elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(
-            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
-        q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                  ).values_list('questionnaire_id').distinct()
-        quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
-        count = quest.count()
+    if request.method == "POST":
+        print(request.POST)
+        start = request.POST.get('start_date')
+        end = request.POST.get('end_date')
+        if user.access_level.id == 3:
+            quest = Questionnaire.objects.filter(created_at__gte=start, created_at__lte=end).order_by('-created_at')
+            count = Questionnaire.objects.filter(created_at__gte=start, created_at__lte=end).count()
 
-        context = {
-            'u': u,
-            'quest': quest,
-            'fac': fac,
-            'count': count,
-        }
-        return render(request, 'survey/questionnaires.html', context)
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+            context = {
+                'u': u,
+                'quest': quest,
+                'count': count,
+            }
+
+            return render(request, 'survey/questionnaires.html', context)
+        elif user.access_level.id == 2:
+            fac = Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+            q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                      ).values_list('questionnaire_id').distinct()
+            quest = Questionnaire.objects.filter(id__in=q, created_at__gte=start, created_at__lte=end).order_by('-created_at')
+            count = quest.count()
+
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+
+            context = {
+                'u': u,
+                'quest': quest,
+                'fac': fac,
+                'count': count,
+            }
+            return render(request, 'survey/questionnaires.html', context)
+    elif request.method == "GET":
+        if user.access_level.id == 3:
+            quest = Questionnaire.objects.all().order_by('-created_at')
+            count = Questionnaire.objects.all().count()
+            fac = Facility.objects.all()
+
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+            context = {
+                'u': u,
+                'quest': quest,
+                'fac': fac,
+                'count': count,
+            }
+            return render(request, 'survey/questionnaires.html', context)
+        elif user.access_level.id == 2:
+            fac = Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+            q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                      ).values_list('questionnaire_id').distinct()
+            quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
+            count = quest.count()
+
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+
+            context = {
+                'u': u,
+                'quest': quest,
+                'fac': fac,
+                'count': count,
+            }
+            return render(request, 'survey/questionnaires.html', context)
 
 
 @login_required
