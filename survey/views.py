@@ -105,6 +105,7 @@ def answer_question(request):
     if q.question_type == 3:
         a = request.data.copy()
         trans_one = transaction.savepoint()
+        print(a)
         b = a['answer'].replace('[', '').replace(' ', '').replace(']', '').split(',')
         print(b)
         for i in b:
@@ -112,11 +113,38 @@ def answer_question(request):
             serializer = ResponseSerializer(data=a)
             if serializer.is_valid(raise_exception=True):
                 serializer.save()
-                data = check_answer_algo(serializer)
 
             else:
                 transaction.savepoint_rollback(trans_one)
-                break
+                return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
+
+        q = Question.objects.get(id=serializer.data['question'])
+        quest = Questionnaire.objects.get(id=q.questionnaire_id)
+        questions = Question.objects.filter(questionnaire=quest)
+
+        foo = q
+        previous = next_ = None
+        l = len(questions)
+        for index, obj in enumerate(questions):
+            if obj == foo:
+                if index > 0:
+                    previous = questions[index - 1]
+                if index < (l - 1):
+                    next_ = questions[index + 1]
+                    return JsonResponse({
+                        'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(next_.id),
+                        "session_id": serializer.data['session']
+                    })
+
+                elif next_ == None:
+                    end = End_Questionnaire.objects.create(questionnaire=quest, session_id=serializer.data['session'])
+                    end.save()
+                    return Res({
+                        "success": True,
+                        "Message": "Questionnaire complete, Thank You👌!"
+                    }, status.HTTP_200_OK)
+        return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
+
 
     else:
         serializer = ResponseSerializer(data=request.data)
@@ -154,12 +182,6 @@ def check_answer_algo(ser):
                     'link': 'http://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     "session_id": ser.data['session']
                 })
-                # return Res({
-                #     "success": True,
-                #     "Question": serializer.data,
-                #     "Ans": ans_ser.data,
-                #     "session_id": ser.data['session']
-                # }, status.HTTP_200_OK)
             elif next_ == None:
                 end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
                 end.save()
