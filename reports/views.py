@@ -90,3 +90,15 @@ class RespViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         nome = self.kwargs['question_id']
         return Response.objects.filter(question_id=nome).order_by('-id')
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            for q in qs:
+                if q.question.question_type == 1:
+                    return qs.filter(open_text__icontains=search)
+                else:
+                    return qs.filter(answer__option__icontains=search)
+
+        return qs
+
