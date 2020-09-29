@@ -12,9 +12,8 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
-BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
+BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
@@ -26,7 +25,6 @@ SECRET_KEY = 'b6&xe78vjs@fr3hjek^36e#01nrq*tgipu5q49s9p0n2-f0q5)'
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
-
 
 # Application definition
 
@@ -79,16 +77,25 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 
 
+
+# Pagination
+# PAGINATION_SETTINGS = {
+#     'PAGE_RANGE_DISPLAYED': 1,
+#     'MARGIN_PAGES_DISPLAYED': 1,
+#
+#     'SHOW_FIRST_PAGE_WHEN_INVALID': True,
+# }
+
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
-     'default': {
+    'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'pSurvey',
         'USER': 'nishauri',
         'PASSWORD': 'nishauri',
-        'HOST': 'localhost',   # Or an IP Address that your DB is hosted on
+        'HOST': 'localhost',  # Or an IP Address that your DB is hosted on
         'PORT': '5432',
     }
 }
@@ -107,9 +114,18 @@ REST_FRAMEWORK = {
     ),
     'DEFAULT_PERMISSIONS_CLASSES': (
         'rest_framework.permissions.IsAuthenticated'
-    )
+    ),
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+        'rest_framework_datatables.renderers.DatatablesRenderer',
+    ),
+    'DEFAULT_FILTER_BACKENDS': (
+        'rest_framework_datatables.filters.DatatablesFilterBackend',
+    ),
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework_datatables.pagination.DatatablesPageNumberPagination',
+    'PAGE_SIZE': 50,
 }
-
 
 DJOSER = {
     'LOGIN_FIELD': 'msisdn',
@@ -120,7 +136,6 @@ DJOSER = {
         # 'current_user': 'authApp.serializer.MyUserSerializer'
     }
 }
-
 
 # Password validation
 # https://docs.djangoproject.com/en/3.1/ref/settings/#auth-password-validators
@@ -133,13 +148,12 @@ AUTH_PASSWORD_VALIDATORS = [
         'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
     },
     # {
-        # 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    # 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     # },
     # {
-        # 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    # 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
     # },
 ]
-
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.1/topics/i18n/
@@ -153,7 +167,6 @@ USE_I18N = True
 USE_L10N = True
 
 USE_TZ = True
-
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.1/howto/static-files/

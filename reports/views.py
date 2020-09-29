@@ -3,7 +3,9 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, JsonResponse
 from django.shortcuts import render
 from django.db.models import Count
+from rest_framework import viewsets
 
+from reports.serializer import RespSerializer
 from survey.models import *
 
 
@@ -42,10 +44,9 @@ def index (request, q_id):
 
 
 def open_end (request, q_id):
-    user = request.user
     keywords = request.POST.get('keywords')
     print(keywords)
-    words = keywords.split(',')
+    words = keywords.replace(' ', '').split(',')
 
     labels = []
     data = []
@@ -80,3 +81,24 @@ def pie_chart (request):
         'labels': labels,
         'data': data,
     })
+
+
+class RespViewSet(viewsets.ModelViewSet):
+    serializer_class = RespSerializer
+
+
+    def get_queryset(self):
+        nome = self.kwargs['question_id']
+        return Response.objects.filter(question_id=nome).order_by('-id')
+
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            for q in qs:
+                if q.question.question_type == 1:
+                    return qs.filter(open_text__icontains=search)
+                else:
+                    return qs.filter(answer__option__icontains=search)
+
+        return qs
