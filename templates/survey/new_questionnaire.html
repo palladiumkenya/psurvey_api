@@ -69,7 +69,7 @@
                                                         name="facility" id="facility" placeholder="Facilities" required>
                                                     {% for foo in fac %}
                                                         <option value="{{ foo.id }}">{{ foo.name }}
-                                                            | {{ foo.mfl_code }}</option>
+                                                            | {{ foo.mfl_code }} | {{ foo.sub_county }}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
@@ -212,7 +212,7 @@
                     $('#facility').html(options);
                     for (var i = 0; i < data.length; i++) {
                         var options = '<option value="' + data[i]['pk'] + '">' + data[i].fields['name'] + ' | ' +
-                            data[i].fields['mfl_code'] + ' </option> ';
+                            data[i].fields['mfl_code'] + ' | '+ data[i].fields['sub_county'] + ' </option> ';
                         $('#facility').append(options);
                     }
                     $('#facility').multipleSelect('refresh');

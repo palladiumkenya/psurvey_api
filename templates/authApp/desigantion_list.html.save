@@ -1,15 +1,15 @@
 {% extends 'survey/base.html' %}
 {% block title %}
-Designation list
+    Designation list
 {% endblock %}
 {% block breadcrumb %}
 
-    <h6 class="h5 text-white d-inline-block mb-0">Designation list</h6>
+    <h6 class="h5 text-white d-inline-block mb-0">Partner-Facilities list</h6>
     <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
         <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
             <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i></a></li>
             <li class="breadcrumb-item"><a href="."><small>Designation list</small></a></li>
-            <li class="breadcrumb-item active" aria-current="page"><small>Designation list</small></li>
+            <li class="breadcrumb-item active" aria-current="page"><small>Partner-Facilities list</small></li>
         </ol>
     </nav>
 {% endblock %}
