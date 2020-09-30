@@ -1,11 +1,15 @@
 from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import HttpResponse, JsonResponse
+from rest_framework.response import Response as Res
+from datetime import date
 from django.shortcuts import render
 from django.db.models import Count
-from rest_framework import viewsets
+from rest_framework import viewsets, status
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import IsAuthenticated
 
-from reports.serializer import RespSerializer
+from reports.serializer import *
 from survey.models import *
 
 
@@ -83,6 +87,25 @@ def pie_chart (request):
     })
 
 
+def users_report (request):
+    return render(request, 'reports/user_report.html')
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def current_user(request):
+    queryset = Users.objects.filter(access_level_id=1)
+    li = []
+    for q in queryset:
+        serializer = AllUserSerializer(q)
+        aq = Facility_Questionnaire.objects.filter(
+            facility=q.facility, questionnaire__active_till__gte=date.today()).count()
+        serializer.data.update({'facilit': q.facility})
+        cs = End_Questionnaire.objects.filter(session__started_by=q).count()
+        li.append({'user': serializer.data, 'questionnaires': aq, 'Completed_surveys': cs, 'facility': q.facility.name})
+    return Res(li, status=status.HTTP_200_OK)
+
+
 class RespViewSet(viewsets.ModelViewSet):
     serializer_class = RespSerializer
 
@@ -90,7 +113,6 @@ class RespViewSet(viewsets.ModelViewSet):
     def get_queryset(self):
         nome = self.kwargs['question_id']
         return Response.objects.filter(question_id=nome).order_by('-id')
-
 
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)
@@ -102,3 +124,4 @@ class RespViewSet(viewsets.ModelViewSet):
                     return qs.filter(answer__option__icontains=search)
 
         return qs
+

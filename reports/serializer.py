@@ -1,4 +1,6 @@
 from rest_framework import serializers
+
+from authApp.serializer import *
 from survey.models import Response, Answer
 
 
@@ -13,4 +15,12 @@ class RespSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Response
+        fields = '__all__'
+
+
+class AllUserSerializer(serializers.ModelSerializer):
+    designation = DesignationSerializer(read_only=True)
+    facility = FacilitySerializer(read_only=True)
+    class Meta:
+        model=Users
         fields = '__all__'
