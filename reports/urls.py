@@ -12,6 +12,8 @@ urlpatterns = [
     #web urls
     path('web/reports/response/<int:q_id>', views.index, name='response_report'),
     path('web/reports/open_resp/<int:q_id>', views.open_end, name='open_resp_report'),
+    path('web/reports/users', views.users_report, name='users_report'),
+    path('web/reports/list/', views.current_user, name='users_list'),
     url('^api/', include(router.urls)),
 
 ]
