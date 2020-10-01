@@ -30,39 +30,18 @@
                     <h3 class="text-center">Users List</h3>
                     <div class="table-responsive">
                         <!-- Projects table -->
-                        <div class="row">
-                            <div class="col-sm-12 col-md-4">
-                            </div>
-                            <div class="col-sm-12 col-md-5">
-                            </div>
-                            <div class="col-sm-12 col-md-3">
-                                <label class="align-right" for="id_number">
-                                    Search:
-                                </label>
-                                <input class="form-control form-control-sm" type="text" id="id_number"
-                                       name="id_number"/>
-                            </div>
-                        </div>
-                        <table id="albums" class="table table-striped table-bordered" style="width:100%"
-                               data-server-side="true" data-ajax="/web/reports/list/?format=datatables">
+
+                        <table id="users" class="table table-striped table-bordered" style="width:100%"
+                               data-server-side="true" data-ajax="/api/reports/list/?format=datatables">
                             <thead class="thead-light">
                             <tr>
-                                <th data-data="user.f_name" data-name="user.f_name">First name</th>
-                                <th data-data="user.l_name" data-name="user.l_name">Last name</th>
+                                <th data-data="f_name">First name</th>
+                                <th data-data="l_name">Last name</th>
                                 <th data-data="facility">Facility</th>
                                 <th data-data="designation">Designation</th>
-                                <th data-data="Completed_surveys">Completed Surveys</th>
+                                <th data-data="cs">Completed Surveys</th>
                             </tr>
                             </thead>
-                            <tfoot>
-                            <tr>
-                                <th>First Name</th>
-                                <th>Last Name</th>
-                                <th>Facility</th>
-                                <th>Designation</th>
-                                <th>Completed surveys</th>
-                            </tr>
-                            </tfoot>
                         </table>
                     </div>
 
@@ -74,39 +53,13 @@
 
 {% endblock %}
 {% block scripts %}
-    <script src="//code.jquery.com/jquery-1.12.4.js"></script>
     <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
     <script src="//cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+
     <script>
         $(document).ready(function () {
-            var table = $('#albums').DataTable({
-                initComplete: function () {
-                    this.api().columns().every(function () {
-                        var column = this;
-                        var select = $('<select><option value=""></option></select>')
-                            .appendTo($(column.footer()).empty())
-                            .on('change', function () {
-                                var val = $.fn.dataTable.util.escapeRegex(
-                                    $(this).val()
-                                );
+            $('#users').DataTable();
 
-                                column
-                                    .search(val ? '^' + val + '$' : '', true, false)
-                                    .draw();
-                            });
-
-                        column.data().unique().sort().each(function (d, j) {
-                            select.append('<option value="' + d + '">' + d + '</option>')
-                        });
-                    });
-                }
-            });
-            var x = document.getElementById("albums_filter")
-            x.style.display = "none";
-            $('#id_number').on('keyup', function () {
-                table.columns(1).search(this.value).draw();
-                console.log(this.value)
-            });
         });
         $.fn.dataTable.ext.errMode = 'throw';
     </script>

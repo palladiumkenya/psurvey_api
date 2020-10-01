@@ -80,20 +80,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 
-# Celery
-CELERY_BROKER_URL = 'amqp://localhost'
-CELERY_TIMEZONE = 'Africa/Nairobi'
-CELERY_BEAT_SCHEDULE = {
-    'send-summary-every-hour': {
-        'task': 'survey.tasks.quest_active_check',
-        'schedule': 20.0,
-    },
-    'send-notification-on-friday-afternoon': {
-        'task': 'authApp.tasks.send_notification',
-        'schedule': 10,
-    },
-    # Executes every Friday at 4pm
-}
 
 # Pagination
 # PAGINATION_SETTINGS = {

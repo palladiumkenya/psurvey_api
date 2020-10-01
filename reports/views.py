@@ -4,7 +4,7 @@ from django.http import HttpResponse, JsonResponse
 from rest_framework.response import Response as Res
 from datetime import date
 from django.shortcuts import render
-from django.db.models import Count
+from django.db.models import Count, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -91,24 +91,20 @@ def users_report (request):
     return render(request, 'reports/user_report.html', {'u': request.user})
 
 
-@api_view(['GET'])
-@permission_classes([IsAuthenticated])
-def current_user(request):
+class Current_user(viewsets.ModelViewSet):
     queryset = Users.objects.filter(access_level_id=1)
-    li = []
-    for q in queryset:
-        serializer = AllUserSerializer(q)
-        aq = Facility_Questionnaire.objects.filter(
-            facility=q.facility, questionnaire__active_till__gte=date.today()).count()
-        serializer.data.update({'facilit': q.facility})
-        cs = End_Questionnaire.objects.filter(session__started_by=q).count()
-        li.append({'user': serializer.data, 'questionnaires': aq, 'Completed_surveys': cs, 'facility': q.facility.name, 'designation': q.designation.name})
-    return Res(li, status=status.HTTP_200_OK)
+    serializer_class = AllUserSerializer
+
+    def filter_queryset(self, qs):
+        search = self.request.GET.get('search[value]', None)
+        if search:
+            qs = qs.filter(Q(designation__name__icontains=search) | Q(facility__name__icontains=search))
+
+        return qs
 
 
 class RespViewSet(viewsets.ModelViewSet):
     serializer_class = RespSerializer
-
 
     def get_queryset(self):
         nome = self.kwargs['question_id']
