@@ -53,31 +53,20 @@
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
+
+                                        <label class="form-control-label" for="facility">Target Facility</label>
                                         <div>
-                                            <label class="form-control-label" for="county_filt">County</label>
-                                            <select multiple="multiple" class="form-control" name="county"
-                                                    id="county_filt"
-                                                    placeholder="Counties" onchange="getcounty()">
-                                                {% for foo in county %}
-                                                    <option value="{{ foo.county }}">{{ foo.county }}</option>
+                                            <select class="form-control" data-live-search="true" multiple
+                                                    name="facility" id="facility" required>
+                                                {% for f in fac_sel %}
+                                                    <option value="{{ f.id }}" selected="selected">{{ f.name }}
+                                                        | {{ f.county }} | {{ f.sub_county }}</option>
+                                                {% endfor %}
+                                                {% for foo in fac %}
+                                                    <option value="{{ foo.id }}">{{ foo.name }}
+                                                        | {{ foo.county }} | {{ foo.sub_county }}</option>
                                                 {% endfor %}
                                             </select>
-                                        </div>
-                                        <div>
-                                            <label class="form-control-label" for="facility">Target Facility</label>
-                                            <div>
-                                                <select class="form-control" data-live-search="true" multiple
-                                                        name="facility" id="facility" required>
-                                                    {% for f in fac_sel %}
-                                                        <option value="{{ f.id }}" selected="selected">{{ f.name }}
-                                                            | {{ f.mfl_code }} | {{ f.sub_county }}</option>
-                                                    {% endfor %}
-                                                    {% for foo in fac %}
-                                                        <option value="{{ foo.id }}">{{ foo.name }}
-                                                            | {{ foo.mfl_code }} | {{ foo.sub_county }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>

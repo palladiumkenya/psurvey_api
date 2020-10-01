@@ -107,14 +107,14 @@
                             <span class="nav-link-text">Profile</span>
                         </a>
                     </li>
-                    {% if u.access_level_id == 3 %}
-                        <li class="nav-item">
-                            <button class="nav-link dropdown-btn">
-                                <i class="fa fa-caret-down"></i>
-                                <i class="ni ni-settings text-primary"></i>
-                                <span class="nav-link-text">Settings</span>
-                            </button>
-                            <div class="dropdown-container">
+                    <li class="nav-item">
+                        <button class="nav-link dropdown-btn">
+                            <i class="fa fa-caret-down"></i>
+                            <i class="ni ni-settings text-primary"></i>
+                            <span class="nav-link-text">Settings</span>
+                        </button>
+                        <div class="dropdown-container">
+                            {% if u.access_level_id == 3 %}
                                 <a class="nav-link " href="{% url 'facility-partner-list' %}  ">
                                     <i class="ni ni-compass-04 text-black-50"></i>
                                     <span class="nav-link-text">Facility Partner Link</span>
@@ -123,13 +123,13 @@
                                     <i class="ni ni-archive-2 text-black-50"></i>
                                     <span class="nav-link-text">Designations</span>
                                 </a>
-                                <a class="nav-link " href="{% url 'users_report' %}  ">
-                                    <i class="ni ni-satisfied text-black-50"></i>
-                                    <span class="nav-link-text">Users List</span>
-                                </a>
-                            </div>
-                        </li>
-                    {% endif %}
+                            {% endif %}
+                            <a class="nav-link " href="{% url 'users_report' %}  ">
+                                <i class="ni ni-satisfied text-black-50"></i>
+                                <span class="nav-link-text">Users List</span>
+                            </a>
+                        </div>
+                    </li>
 
                 </ul>
 

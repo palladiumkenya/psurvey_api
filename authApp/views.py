@@ -108,6 +108,8 @@ def designation_list(request):
 @login_required
 def facility_partner_list(request):
     user = request.user
+    if user.access_level.id != 3:
+        raise PermissionDenied
     partner = Partner.objects.all().order_by('-created_at')
     page = request.GET.get('page', 1)
     paginator = Paginator(partner, 10)
@@ -128,6 +130,8 @@ def facility_partner_list(request):
 @login_required
 def facility_partner_link(request):
     user = request.user
+    if user.access_level.id != 3:
+        raise PermissionDenied
     par_fac = Partner_Facility.objects.all()
     facilities = Facility.objects.all().exclude(id__in=par_fac.values_list('facility_id', flat=True))
 
@@ -158,7 +162,9 @@ def facility_partner_link(request):
 @login_required
 def register_partner(request):
     u = request.user
-    facilities = Facility.objects.exclude(id__in=Partner_Facility.objects.values_list('facility_id', flat=True))
+    if request.user.access_level.id != 3:
+        raise PermissionDenied
+    facilities = Facility.objects.exclude(id__in=Partner_Facility.objects.values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
     if request.method == 'POST':
         trans_one = transaction.savepoint()
         f_name = request.POST.get('f_name')

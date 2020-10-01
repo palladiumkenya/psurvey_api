@@ -235,9 +235,8 @@ def index(request):
         return render(request, 'survey/dashboard.html', context)
     elif user.access_level.id == 2:
         fac = Facility.objects.filter(id__in=Partner_Facility.objects.filter(
-            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True)).values_list('facility_id', flat=True))
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True)).values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
 
-        print(fac)
         quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('id', flat=True)
                                                       ).values_list('questionnaire').distinct()
         aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('id', flat=True),
@@ -329,7 +328,7 @@ def trend_chart(request):
             created_at__lte=end,
             session__in=st,
         ).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values('month', 'c').order_by('month')
-    
+
     for entry in re:
         labels.append(entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'))
         data.append(entry['c'])
@@ -372,7 +371,7 @@ def new_questionnaire(request):
                 return HttpResponse("error")
 
     if user.access_level.id == 3:
-        facilities = Facility.objects.all()
+        facilities = Facility.objects.all().order_by('county', 'sub_county', 'name')
         queryset = Facility.objects.all().distinct('county')
         context = {
             'u': u,
@@ -383,7 +382,7 @@ def new_questionnaire(request):
     elif user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
-        facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True))
+        facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
         queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
         context = {
             'u': u,
@@ -440,23 +439,20 @@ def edit_questionnaire(request, q_id):
     if user.access_level.id == 3:
         question = Questionnaire.objects.get(id=q_id)
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
-        facilities = Facility.objects.all().exclude(id__in=selected.values_list('facility_id', flat=True))
+        facilities = Facility.objects.all().exclude(id__in=selected.values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
         s = Facility.objects.all().filter(id__in=selected.values_list('facility_id', flat=True))
-        queryset = Facility.objects.all().distinct('county')
 
         context = {
             'u': u,
             'fac': facilities,
             'q': question,
             'fac_sel': s,
-            'county': queryset,
         }
         return render(request, 'survey/edit_questionnaire.html', context)
     if user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
         selected = Facility_Questionnaire.objects.filter(questionnaire_id=q_id)
-        queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
         try:
             question = Questionnaire.objects.get(id=q_id)
         except Questionnaire.DoesNotExist:
@@ -465,15 +461,14 @@ def edit_questionnaire(request, q_id):
         if question.created_by.access_level.id == 3:
             raise PermissionDenied
         facilities = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)
-                                             ).exclude(id__in=selected.values_list('facility_id', flat=True))
-        s = Facility.objects.all().filter(id__in=selected.values_list('facility_id', flat=True))
+                                             ).exclude(id__in=selected.values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
+        s = Facility.objects.all().filter(id__in=selected.values_list('facility_id', flat=True)).order_by('county', 'sub_county', 'name')
 
         context = {
             'u': u,
             'fac': facilities,
             'q': question,
             'fac_sel': s,
-            'county': queryset,
         }
         return render(request, 'survey/edit_questionnaire.html', context)
 

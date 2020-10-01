@@ -92,8 +92,16 @@ def users_report (request):
 
 
 class Current_user(viewsets.ModelViewSet):
-    queryset = Users.objects.filter(access_level_id=1)
     serializer_class = AllUserSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        if user.access_level.id == 2:
+            return Users.objects.filter(facility_id__in=Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True)).values_list('facility_id', flat=True), access_level_id=1)
+        if user.access_level.id ==3:
+            return Users.objects.filter(access_level_id=1)
+
 
     def filter_queryset(self, qs):
         search = self.request.GET.get('search[value]', None)

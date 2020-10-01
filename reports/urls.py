@@ -7,7 +7,7 @@ from django.urls import path, include
 
 router = routers.DefaultRouter()
 router.register(r'albums/(?P<question_id>\d+)', views.RespViewSet, basename='Response')
-router.register(r'reports/list', views.Current_user)
+router.register(r'reports/list', views.Current_user, basename='Users')
 
 urlpatterns = [
     #web urls
