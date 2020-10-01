@@ -209,3 +209,5 @@ pSurvey_api/static/authApp/vendor/prismjs/
 pSurvey_api/static/survey/img/
 source/_static/
 source/_templates/
+.idea/pSurvey_api.iml
+.idea/jsLibraryMappings.xml

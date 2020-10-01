@@ -11,6 +11,7 @@ from django.db.models import Count
 from django.db.models.functions import Cast, TruncMonth
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect
+from docutils.nodes import status
 from rest_framework import status
 from rest_framework.response import Response as Res
 from rest_framework.decorators import api_view, permission_classes
@@ -218,7 +219,7 @@ def get_fac(request):
 def index(request):
     user = request.user
     if user.access_level.id == 3:
-        fac = Facility.objects.all()
+        fac = Facility.objects.all().order_by('county', 'sub_county', 'name')
         quest = Questionnaire.objects.all()
         aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
         resp = End_Questionnaire.objects.filter()
@@ -233,17 +234,17 @@ def index(request):
         }
         return render(request, 'survey/dashboard.html', context)
     elif user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(
-            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
+        fac = Facility.objects.filter(id__in=Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True)).values_list('facility_id', flat=True))
+
         print(fac)
-        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('id', flat=True)
                                                       ).values_list('questionnaire').distinct()
-        aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True),
+        aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('id', flat=True),
                                                    questionnaire__is_active=True,
                                                    questionnaire__active_till__gte=date.today()
                                                    ).values_list('questionnaire').distinct()
-        queryset = Facility.objects.filter(id__in=fac.values_list('facility_id', flat=True)).distinct('county')
-        print(queryset)
+
         resp = End_Questionnaire.objects.filter(questionnaire__in=quest)
         context = {
             'u': user,
@@ -251,7 +252,6 @@ def index(request):
             'quest': quest,
             'aq': aq,
             'resp': resp,
-            'county': queryset,
         }
         return render(request, 'survey/dashboard.html', context)
 
@@ -259,41 +259,38 @@ def index(request):
 def resp_chart(request):
     start = request.POST.get('start_date')
     end = request.POST.get('end_date')
-    county = request.POST.getlist('co[]', '')
     facilities = request.POST.getlist('fac[]', '')
 
-    if facilities == '' and county == '':
-        facilities = Facility.objects.values_list('id', flat=True)
-    elif facilities == '':
-        facilities = Facility.objects.filter(county__in=county).values_list('id', flat=True)
-    if county == '':
-        county = Facility.objects.all().distinct('county').values_list('county', flat=True)
+
     labels = []
     data = []
     if request.user.access_level.id == 3:
+        if facilities == '':
+            facilities = Facility.objects.values_list('id', flat=True)
+        st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
         queryset = Response.objects.filter(
             created_at__gte=start,
             created_at__lte=end,
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility_id__in=facilities).values_list('questionnaire_id', flat=True),
-        ).filter(
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility__county__in=county).values_list('questionnaire_id', flat=True)).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+            session__in=st
+        ).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+
     if request.user.access_level.id == 2:
-        fac = Partner_Facility.objects.filter(
-            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
-        quest = Facility_Questionnaire.objects.filter(
-            facility__in=fac.values_list('facility', flat=True),
-            facility_id__in=facilities, facility__county__in=county).values_list('questionnaire',flat=True).distinct('questionnaire')
-        print('sssssssssss',quest)
+        if facilities == '':
+            facilities = Facility.objects.filter(id__in=Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True)).values_list(
+                'facility_id', flat=True))
+        st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
 
         queryset = Response.objects.filter(
             created_at__gte=start,
             created_at__lte=end,
-            question__questionnaire__in=quest,
+            session__in=st
         ).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
 
     for entry in queryset:
         labels.append(entry['created_at'])
         data.append(entry['count'])
+
 
     return JsonResponse(data={
         'labels': labels,
@@ -304,53 +301,35 @@ def resp_chart(request):
 def trend_chart(request):
     start = request.POST.get('start_date')
     end = request.POST.get('end_date')
-    county = request.POST.getlist('co[]', '')
     facilities = request.POST.getlist('fac[]', '')
 
-    if facilities == '' and county == '':
-        facilities = Facility.objects.values_list('id', flat=True)
-    elif facilities == '':
-        facilities = Facility.objects.filter(county__in=county).values_list('id', flat=True)
-    if county == '':
-        county = Facility.objects.all().distinct('county').values_list('county', flat=True)
     labels = []
     data = []
     if request.user.access_level.id == 3:
+        if facilities == '':
+            facilities = Facility.objects.values_list('id', flat=True)
+        st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
         re = Response.objects.filter(
             created_at__gte=start,
             created_at__lte=end,
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility_id__in=facilities).values_list('questionnaire_id', flat=True),
-        ).filter(
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(facility__county__in=county).values_list('questionnaire_id', flat=True)).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values(
+            session__in=st
+        ).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values(
             'month', 'c').order_by('month')
 
 
     if request.user.access_level.id == 2:
+        if facilities == '':
+            facilities = Facility.objects.filter(id__in=Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True)).values_list(
+                'facility_id', flat=True))
+        st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
 
-        fac = Partner_Facility.objects.filter(
-            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
-        quest = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                      ).values_list('questionnaire').distinct()
         re = Response.objects.filter(
             created_at__gte=start,
             created_at__lte=end,
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(
-                facility_id__in=facilities).values_list('questionnaire_id', flat=True),
-            question__questionnaire__in=quest
-        ).filter(
-            question__questionnaire_id__in=Facility_Questionnaire.objects.filter(
-                facility__county__in=county).values_list('questionnaire_id', flat=True)).annotate(
-            month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values(
-            'month', 'c').order_by('month')
-    result = []
-    start = datetime.strptime(start, '%Y-%m-%d').date()
-    end = datetime.strptime(end, '%Y-%m-%d').date()
-    #
-    # while start <= end:
-    #     result.append(start.strftime('%B')+ '-' + start.strftime('%y'))
-    #     start += relativedelta(months=1)
-
-
+            session__in=st,
+        ).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values('month', 'c').order_by('month')
+    
     for entry in re:
         labels.append(entry['month'].strftime('%B') + '-' + entry['month'].strftime('%y'))
         data.append(entry['c'])

@@ -129,25 +129,16 @@
                                 <span></span> <i class="fa fa-caret-down"></i>
                             </div>
                         </div>
-                        <div class="col-xl-4">
-                            <div class="form-group">
-                                <label class="form-control-label" for="county_filt">Counties</label>
-                                <div>
-                                    <select multiple="multiple" class="form-control" name="county" id="county_filt"
-                                            placeholder="Counties" onchange="getcounty()" required>
-                                        {% for foo in county %}
-                                            <option value="{{ foo.county }}">{{ foo.county }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="col-xl-4">
+
+                        <div class="col-xl-6">
                             <div class="form-group">
                                 <label class="form-control-label" for="facility">Facilities</label>
                                 <div>
                                     <select multiple="multiple" class="form-control" name="facility" id="facility"
-                                            placeholder="Facilities" onchange="county()" required>
+                                            placeholder="Facilities" onchange="facChange()" required>
+                                        {% for f in fac %}
+                                            <option value="{{ f.id }}">{{ f.name }} | {{ f.county }} | {{ f.sub_county }}</option>
+                                        {% endfor %}
                                     </select>
                                 </div>
                             </div>
@@ -172,7 +163,8 @@
                     <!-- Chart -->
                     <div class="chart" id="chart1">
                         <!-- Chart wrapper -->
-                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}" class="chart-canvas"></canvas>
+                        <canvas id="population-chart" data-url="{% url 'all-resp-chart' %}"
+                                class="chart-canvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -205,7 +197,7 @@
         $(function () {
             $('select').multipleSelect({
                 multiple: true,
-                multipleWidth: 400,
+                multipleWidth: 450,
                 filter: true,
                 filterPlaceholder: 'Search'
             });
@@ -216,12 +208,10 @@
 
         let start = moment().subtract(29, 'days');
         let end = moment();
-        let counties = $('#county_filt');
         let facilities = $('#facility');
         $(function () {
             ChartInit();
             DateRange();
-            getcounty();
         });
 
         function DateRange() {
@@ -301,43 +291,8 @@
             canvas = document.querySelector('#chart-bar');
         }
 
-        function county() {
-            var fac = $('#facility').val()
+        function facChange() {
             ChartInit();
-        }
-
-        function getcounty() {
-            var county = $('#county_filt').val();
-            console.log(county);
-            $.ajax({
-                url: '/get/facilities/',
-                type: 'POST',
-                datatype: 'json',
-                data: {
-                    county_list: county,
-                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
-                },
-
-                success: function (data) {
-                    $('#facility').empty();
-                    $('#facility').multipleSelect('destroy')
-                    var options = '';
-                    console.log("in success ward");
-                    console.log(data);
-                    $('#facility').html(options);
-                    for (var i = 0; i < data.length; i++) {
-                        var options = '<option value="' + data[i]['pk'] + '">' + data[i].fields['name'] + ' | ' +
-                            data[i].fields['mfl_code'] + ' </option> ';
-                        $('#facility').append(options);
-                    }
-                    $('#facility').multipleSelect('refresh');
-                    ChartInit();
-                }, error: function () {
-                    console.log("in error");
-                    var options = '<option value="" selected disabled></option>';
-                    $('#county').html(options);
-                }
-            });
         }
 
         function ChartInit() {
@@ -349,7 +304,6 @@
                 data: {
                     start_date: start.format('YYYY-MM-DD'),
                     end_date: end.format('YYYY-MM-DD'),
-                    co: counties.val(),
                     fac: facilities.val(),
                 },
                 type: 'POST',
@@ -393,7 +347,6 @@
                 data: {
                     start_date: start.format('YYYY-MM-DD'),
                     end_date: end.format('YYYY-MM-DD'),
-                    co: counties.val(),
                     fac: facilities.val(),
                 },
                 type: 'POST',
