@@ -54,7 +54,7 @@
                                     <select multiple="multiple" class="form-control" name="facility" id="facility"
                                             placeholder="Facilities" onchange="county()" required>
                                         {% for foo in fac %}
-                                            <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.mfl_code }}</option>
+                                            <option value="{{ foo.id }}">{{ foo.name }} | {{ foo.county }} | {{ foo.sub_county }}</option>
                                         {% endfor %}
                                     </select>
                                 </div>

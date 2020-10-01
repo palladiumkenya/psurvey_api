@@ -52,27 +52,16 @@
                                 </div>
                                 <div class="col-lg-6">
                                     <div class="form-group">
-                                        <label class="form-control-label" for="county_filt">County</label>
+
+                                        <label class="form-control-label" for="facility">Target Facility</label>
                                         <div>
-                                            <select multiple="multiple" class="form-control" name="county"
-                                                    id="county_filt"
-                                                    placeholder="Counties" onchange="getcounty()">
-                                                {% for foo in county %}
-                                                    <option value="{{ foo.county }}">{{ foo.county }}</option>
+                                            <select class="form-control" data-live-search="true" multiple
+                                                    name="facility" id="facility" placeholder="Facilities" required>
+                                                {% for foo in fac %}
+                                                    <option value="{{ foo.id }}">{{ foo.name }}
+                                                        | {{ foo.county }} | {{ foo.sub_county }}</option>
                                                 {% endfor %}
                                             </select>
-                                        </div>
-                                        <div>
-                                            <label class="form-control-label" for="facility">Target Facility</label>
-                                            <div>
-                                                <select class="form-control" data-live-search="true" multiple
-                                                        name="facility" id="facility" placeholder="Facilities" required>
-                                                    {% for foo in fac %}
-                                                        <option value="{{ foo.id }}">{{ foo.name }}
-                                                            | {{ foo.mfl_code }} | {{ foo.sub_county }}</option>
-                                                    {% endfor %}
-                                                </select>
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -190,40 +179,6 @@
             });
 
         });
-
-        function getcounty() {
-            var county = $('#county_filt').val();
-            console.log(county.length);
-            $.ajax({
-                url: '/get/facilities/',
-                type: 'POST',
-                datatype: 'json',
-                data: {
-                    county_list: county,
-                    csrfmiddlewaretoken: $('input[name=csrfmiddlewaretoken]').val()
-                },
-
-                success: function (data) {
-                    $('#facility').empty();
-                    $('#facility').multipleSelect('destroy')
-                    var options = '';
-                    console.log("in success ward");
-                    console.log(data);
-                    $('#facility').html(options);
-                    for (var i = 0; i < data.length; i++) {
-                        var options = '<option value="' + data[i]['pk'] + '">' + data[i].fields['name'] + ' | ' +
-                            data[i].fields['mfl_code'] + ' | '+ data[i].fields['sub_county'] + ' </option> ';
-                        $('#facility').append(options);
-                    }
-                    $('#facility').multipleSelect('refresh');
-
-                }, error: function () {
-                    console.log("in error");
-                    var options = '<option value="" selected disabled></option>';
-                    $('#county').html(options);
-                }
-            });
-        }
 
 
     </script>
