@@ -133,7 +133,7 @@ def answer_question(request):
                 if index < (l - 1):
                     next_ = questions[index + 1]
                     return JsonResponse({
-                        'link': 'http://127.0.0.1:8000/api/questions/answer/{}'.format(next_.id),
+                        'link': 'http://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                         "session_id": serializer.data['session']
                     })
 
@@ -142,6 +142,7 @@ def answer_question(request):
                     end.save()
                     return Res({
                         "success": True,
+
                         "Message": "Questionnaire complete, Thank You👌!"
                     }, status.HTTP_200_OK)
         return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)

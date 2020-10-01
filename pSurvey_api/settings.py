@@ -11,7 +11,10 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 from pathlib import Path
+from celery.schedules import crontab
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
+from docutils.nodes import term
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
@@ -43,6 +46,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -75,7 +79,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
-
 
 
 # Pagination

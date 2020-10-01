@@ -70,11 +70,11 @@
                                                         name="facility" id="facility" required>
                                                     {% for f in fac_sel %}
                                                         <option value="{{ f.id }}" selected="selected">{{ f.name }}
-                                                            | {{ f.mfl_code }}</option>
+                                                            | {{ f.mfl_code }} | {{ f.sub_county }}</option>
                                                     {% endfor %}
                                                     {% for foo in fac %}
                                                         <option value="{{ foo.id }}">{{ foo.name }}
-                                                            | {{ foo.mfl_code }}</option>
+                                                            | {{ foo.mfl_code }} | {{ foo.sub_county }}</option>
                                                     {% endfor %}
                                                 </select>
                                             </div>
