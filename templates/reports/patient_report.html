@@ -1,0 +1,146 @@
+{% extends 'survey/base.html' %}
+{% block title %}
+    Response report
+{% endblock %}
+{% block breadcrumb %}
+    <h4 class="h4 text-white d-inline-block mb-0">Reports</h4>
+    <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
+        <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
+            <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i></a></li>
+            <li class="breadcrumb-item"><a href="."><small>Patient List</small></a></li>
+
+            <li class="breadcrumb-item active" aria-current="page"><small>Patient List</small></li>
+        </ol>
+    </nav>
+{% endblock %}
+{% block body %}
+
+
+    </div>
+    </div>
+    </div>
+    <!-- Page content -->
+    <div class="container-fluid mt--6">
+    <div class="row">
+        <div class="col-xl-12">
+            <div class="card">
+                <div class="card-body">
+                </div>
+                <div class="mt-4">
+                    <h3 class="text-center">Patient List</h3>
+                    <div class="table-responsive">
+                        <!-- Projects table -->
+
+                        <table id="users" class="table table-striped table-bordered" style="width:100%">
+                            <thead>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Office</th>
+                                <th>Salary</th>
+                            </tr>
+                            </thead>
+                            <tfoot>
+                            <tr>
+                                <th></th>
+                                <th>Name</th>
+                                <th>Position</th>
+                                <th>Office</th>
+                                <th>Salary</th>
+                            </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+{% endblock %}
+{% block scripts %}
+    <script src="//cdn.datatables.net/1.10.16/js/jquery.dataTables.min.js"></script>
+    <script src="//cdn.datatables.net/1.10.16/js/dataTables.bootstrap4.min.js"></script>
+    <link href="https://cdn.datatables.net/1.10.22/css/jquery.dataTables.min.css">
+
+    <script>
+
+        function format(d) {
+            // `d` is the original data object for the row
+            console.log(d)
+            return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">' +
+
+                '<tr>' +
+                '<td>Full name:</td>' +
+                '<td>' + d.firstname + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td>Extension number:</td>' +
+                '<td>' + d.extn + '</td>' +
+                '</tr>' +
+                '<tr>' +
+                '<td>Extra info:</td>' +
+                '<td>And any further details here (images etc)...</td>' +
+                '</tr>' +
+                '</table>';
+        }
+
+        var as_t;
+        $(document).ready(function () {
+            $.ajax({
+                type: 'get',
+                url: '/api/patients/list/',
+                success: function (data) {
+                    console.log(data.results)
+                    var table = $('#users').DataTable({
+                        "data": data.results,
+                        "columns": [
+                            {
+                                "className": 'details-control',
+                                "orderable": false,
+                                "data": null,
+                                "defaultContent": ''
+                            },
+                            {"data": "ccc_number"},
+                            {"data": "firstname"},
+                            {"data": "questionnaire"},
+                            {"data": "started_by"},
+                        ],
+                        "order": [[1, 'asc']]
+                    });
+
+                    // Add event listener for opening and closing details
+                    $('#users tbody').on('click', 'td.details-control', function () {
+                        var tr = $(this).closest('tr');
+                        var row = table.row(tr);
+
+
+                        if (row.child.isShown()) {
+                            // This row is already open - close it
+                            row.child.hide();
+                            tr.removeClass('shown');
+                        } else {
+                            console.log(row)
+                            row.child(format(row.data())).show();
+                            tr.addClass('shown');
+                        }
+                    });
+
+                },
+                error: function (er) {
+                    console.log("Login error");
+                    // console.log(er.responseText);
+                    Swal.fire({
+                        title: 'Wrong Login credentials!!',
+                        text: 'Username or Password does NOT exist!!',
+                        icon: 'error',
+                    });
+                }
+            });
+
+        });
+        $.fn.dataTable.ext.errMode = 'throw';
+    </script>
+{% endblock %}

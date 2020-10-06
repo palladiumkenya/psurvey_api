@@ -8,7 +8,8 @@ from django.db.models import Count, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-
+from django_datatables_view.base_datatable_view import BaseDatatableView
+from django.utils.html import escape
 from reports.serializer import *
 from survey.models import *
 
@@ -91,6 +92,10 @@ def users_report (request):
     return render(request, 'reports/user_report.html', {'u': request.user})
 
 
+def patients_report (request):
+    return render(request, 'reports/patient_report.html', {'u': request.user})
+
+
 class Current_user(viewsets.ModelViewSet):
     serializer_class = AllUserSerializer
 
@@ -99,8 +104,10 @@ class Current_user(viewsets.ModelViewSet):
         if user.access_level.id == 2:
             return Users.objects.filter(facility_id__in=Partner_Facility.objects.filter(
                 partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True)).values_list('facility_id', flat=True), access_level_id=1)
-        if user.access_level.id ==3:
+        if user.access_level.id == 3:
             return Users.objects.filter(access_level_id=1)
+        if user.access_level.id == 4:
+            return Users.objects.filter(facility=user.facility, access_level_id=1)
 
 
     def filter_queryset(self, qs):
@@ -109,6 +116,14 @@ class Current_user(viewsets.ModelViewSet):
             qs = qs.filter(Q(designation__name__icontains=search) | Q(facility__name__icontains=search))
 
         return qs
+
+
+class Patients (viewsets.ModelViewSet):
+    serializer_class = PatientSer
+
+    def get_queryset(self):
+        queryset = Started_Questionnaire.objects.filter(started_by__facility=self.request.user.facility)
+        return queryset
 
 
 class RespViewSet(viewsets.ModelViewSet):
