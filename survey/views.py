@@ -2,6 +2,7 @@ import json
 from datetime import date
 
 # from dateutil.relativedelta import relativedelta
+import requests
 from django.contrib.auth.decorators import login_required
 from django.core.exceptions import PermissionDenied
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
@@ -68,6 +69,12 @@ def list_question_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_consent(request):
+    check = check_ccc(request.data['ccc_number'])
+    if not check:
+        return Res({'error': False, 'message': 'ccc number doesnt exist'})
+    if check['f_name'] != request.data['first_name']:
+        return Res({'error': False, 'message': 'client verification failed'})
+
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
     a_id = 0
     for q in quest:
@@ -86,6 +93,23 @@ def get_consent(request):
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
+
+
+def check_ccc(value):
+    user = {
+        "ccc_number": value
+    }
+
+    url = "http://ushaurinode.mhealthkenya.org/api/mlab/get/one/client"
+    headers = {
+        'content-type': "application/json",
+        'Accept': 'application/json'
+    }
+    response = requests.post(url, data=user, json=headers)
+    try:
+        return response.json()["clients"][0]
+    except IndexError:
+        return False
 
 
 @api_view(['GET'])
@@ -245,6 +269,20 @@ def index(request):
                                                    ).values_list('questionnaire').distinct()
 
         resp = End_Questionnaire.objects.filter(questionnaire__in=quest)
+        context = {
+            'u': user,
+            'fac': fac,
+            'quest': quest,
+            'aq': aq,
+            'resp': resp,
+        }
+        return render(request, 'survey/dashboard.html', context)
+    elif user.access_level.id == 4:
+        fac = Facility.objects.all().order_by('county', 'sub_county', 'name')
+        quest = Questionnaire.objects.all()
+        aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
+        resp = End_Questionnaire.objects.filter()
+
         context = {
             'u': user,
             'fac': fac,
