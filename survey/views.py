@@ -26,7 +26,7 @@ from authApp.serializer import *
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_questionnaire_api(request):
-    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).order_by('-questionnaire__active_till')
     list = []
     for i in quest:
         queryset = Questionnaire.objects.filter(id=i.questionnaire.id)
@@ -42,7 +42,7 @@ def active_questionnaire_api(request):
     quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
 
     queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True,
-                                            active_till__gte=date.today())
+                                            active_till__gte=date.today()).order_by('active_till')
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
@@ -107,7 +107,7 @@ def answer_question(request):
     if q.question_type == 3:
         a = request.data.copy()
         trans_one = transaction.savepoint()
-        b = a['answer'].split(',')
+        b = a['answer'].replace(" ", '').replace('[', '').replace(']', '').split(',')
 
         for i in b:
 
