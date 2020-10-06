@@ -52,7 +52,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <h5 class="card-title text-uppercase text-muted mb-0">Total Questionnaire s</h5>
+                            <h5 class="card-title text-uppercase text-muted mb-0">Total Questionnaires</h5>
                             <span class="h2 font-weight-bold mb-0">{{ quest.count }}</span>
                         </div>
                         <div class="col-auto">
@@ -70,7 +70,7 @@
                 <div class="card-body">
                     <div class="row">
                         <div class="col">
-                            <h5 class="card-title text-uppercase text-muted mb-0">Active Questionnaire s</h5>
+                            <h5 class="card-title text-uppercase text-muted mb-0">Active Questionnaires</h5>
                             <span class="h2 font-weight-bold mb-0">{{ aq.count }}</span>
                         </div>
                         <div class="col-auto">
@@ -129,20 +129,22 @@
                                 <span></span> <i class="fa fa-caret-down"></i>
                             </div>
                         </div>
-
-                        <div class="col-xl-6">
-                            <div class="form-group">
-                                <label class="form-control-label" for="facility">Facilities</label>
-                                <div>
-                                    <select multiple="multiple" class="form-control" name="facility" id="facility"
-                                            placeholder="Facilities" onchange="facChange()" required>
-                                        {% for f in fac %}
-                                            <option value="{{ f.id }}">{{ f.name }} | {{ f.county }} | {{ f.sub_county }}</option>
-                                        {% endfor %}
-                                    </select>
+                        {% if u.access_level.id != 4 %}
+                            <div class="col-xl-6">
+                                <div class="form-group">
+                                    <label class="form-control-label" for="facility">Facilities</label>
+                                    <div>
+                                        <select multiple="multiple" class="form-control" name="facility" id="facility"
+                                                placeholder="Facilities" onchange="facChange()" required>
+                                            {% for f in fac %}
+                                                <option value="{{ f.id }}">{{ f.name }} | {{ f.county }}
+                                                    | {{ f.sub_county }}</option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
-                        </div>
+                        {% endif %}
                     </div>
                 </div>
             </div>

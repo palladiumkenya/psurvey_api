@@ -69,12 +69,6 @@ def list_question_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_consent(request):
-    check = check_ccc(request.data['ccc_number'])
-    if not check:
-        return Res({'error': False, 'message': 'ccc number doesnt exist'})
-    if check['f_name'] != request.data['first_name']:
-        return Res({'error': False, 'message': 'client verification failed'})
-
     quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
     a_id = 0
     for q in quest:
@@ -93,6 +87,17 @@ def get_consent(request):
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def initial_consent(request):
+    check = check_ccc(request.data['ccc_number'])
+    if not check:
+        return Res({'error': False, 'message': 'ccc number doesnt exist'})
+    if check['f_name'].upper() != request.data['first_name'].upper():
+        return Res({'error': False, 'message': 'client verification failed'})
+    return Res({'success': True, 'message': "You can now start questionnaire"})
 
 
 def check_ccc(value):
@@ -278,10 +283,11 @@ def index(request):
         }
         return render(request, 'survey/dashboard.html', context)
     elif user.access_level.id == 4:
+        que = Facility_Questionnaire.objects.filter(facility_id=user.facility.id).values_list('questionnaire_id').distinct()
         fac = Facility.objects.all().order_by('county', 'sub_county', 'name')
-        quest = Questionnaire.objects.all()
-        aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
-        resp = End_Questionnaire.objects.filter()
+        quest = Questionnaire.objects.filter(id__in=que)
+        aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today(), id__in=que)
+        resp = End_Questionnaire.objects.filter(session__started_by__facility=user.facility)
 
         context = {
             'u': user,
@@ -317,6 +323,16 @@ def resp_chart(request):
                 partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True)).values_list(
                 'facility_id', flat=True))
         st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
+
+        queryset = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            session__in=st
+        ).values('created_at').annotate(count=Count('created_at')).order_by('created_at')
+
+    if request.user.access_level.id == 4:
+        facilities =  request.user.facility.id
+        st = Started_Questionnaire.objects.filter(started_by__facility_id=facilities)
 
         queryset = Response.objects.filter(
             created_at__gte=start,
@@ -360,6 +376,16 @@ def trend_chart(request):
                 partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True)).values_list(
                 'facility_id', flat=True))
         st = Started_Questionnaire.objects.filter(started_by__facility_id__in=facilities)
+
+        re = Response.objects.filter(
+            created_at__gte=start,
+            created_at__lte=end,
+            session__in=st,
+        ).annotate(month=TruncMonth('created_at')).values('month').annotate(c=Count('month')).values('month', 'c').order_by('month')
+
+    if request.user.access_level.id == 4:
+        facilities = request.user.facility.id
+        st = Started_Questionnaire.objects.filter(started_by__facility_id=facilities)
 
         re = Response.objects.filter(
             created_at__gte=start,
@@ -428,6 +454,8 @@ def new_questionnaire(request):
             'county': queryset,
         }
         return render(request, 'survey/new_questionnaire.html', context)
+    elif user.access_level.id == 4:
+        raise PermissionDenied
 
 
 @login_required
@@ -509,6 +537,8 @@ def edit_questionnaire(request, q_id):
             'fac_sel': s,
         }
         return render(request, 'survey/edit_questionnaire.html', context)
+    if user.access_level.id == 4:
+        raise PermissionDenied
 
 
 @login_required
@@ -538,6 +568,28 @@ def questionnaire(request):
             }
 
             return render(request, 'survey/questionnaires.html', context)
+
+        elif user.access_level.id == 4:
+            q = Facility_Questionnaire.objects.filter(facility_id=user.facility.id).values_list('questionnaire_id').distinct()
+            quest = Questionnaire.objects.filter(created_at__gte=start, created_at__lte=end, id__in=q).order_by('-created_at')
+            count = Questionnaire.objects.filter(created_at__gte=start, created_at__lte=end, id__in=q).count()
+
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+            context = {
+                'u': u,
+                'quest': quest,
+                'count': count,
+            }
+
+            return render(request, 'survey/questionnaires.html', context)
+
         elif user.access_level.id == 2:
             fac = Partner_Facility.objects.filter(
                 partner__in=Partner_User.objects.filter(user=user).values_list('name', flat=True))
@@ -566,6 +618,27 @@ def questionnaire(request):
         if user.access_level.id == 3:
             quest = Questionnaire.objects.all().order_by('-created_at')
             count = Questionnaire.objects.all().count()
+            fac = Facility.objects.all()
+
+            page = request.GET.get('page', 1)
+            paginator = Paginator(quest, 20)
+            try:
+                quest = paginator.page(page)
+            except PageNotAnInteger:
+                quest = paginator.page(1)
+            except EmptyPage:
+                quest = paginator.page(paginator.num_pages)
+            context = {
+                'u': u,
+                'quest': quest,
+                'fac': fac,
+                'count': count,
+            }
+            return render(request, 'survey/questionnaires.html', context)
+        if user.access_level.id == 4:
+            q = Facility_Questionnaire.objects.filter(facility_id=user.facility.id).values_list('questionnaire_id').distinct()
+            quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
+            count = Questionnaire.objects.filter(id__in=q).count()
             fac = Facility.objects.all()
 
             page = request.GET.get('page', 1)
@@ -638,6 +711,8 @@ def add_question(request, q_id):
     if user.access_level.id == 2 and user.access_level.id != Questionnaire.objects.get(
             id=q_id).created_by.access_level.id:
         raise PermissionDenied
+    if user.access_level.id == 4:
+        raise PermissionDenied
     try:
         Questionnaire.objects.get(id=q_id)
     except Questionnaire.DoesNotExist:
@@ -665,6 +740,8 @@ def edit_question(request, q_id):
     if user.access_level.id == 2:
         if Questionnaire.objects.get(id=q.questionnaire_id).created_by.access_level.id == 3:
             raise PermissionDenied
+    if user.access_level.id == 4:
+        raise PermissionDenied
     if request.method == 'POST':
         question = request.POST.get('question')
         q_type = request.POST.get('q_type')  # For q_type 1 is opened ended 2 Radio 3 is Checkbox

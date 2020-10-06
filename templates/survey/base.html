@@ -128,6 +128,12 @@
                                 <i class="ni ni-satisfied text-black-50"></i>
                                 <span class="nav-link-text">Users List</span>
                             </a>
+                            {% if u.access_level.id == 4 %}
+                                <a class="nav-link " href="{% url 'patients_report' %}  ">
+                                    <i class="ni ni-chart-pie-35 text-blue"></i>
+                                    <span class="nav-link-text">Patients List</span>
+                                </a>
+                            {% endif %}
                         </div>
                     </li>
 

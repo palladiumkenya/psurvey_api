@@ -52,6 +52,12 @@
                                             <span class="description">{{ p.name }}</span>
                                         </div>
                                     {% endif %}
+                                    {% if u.access_level.id == 4 %}
+                                        <div>
+                                            <span class="heading">Facility</span>
+                                            <span class="description">{{ u.facility.name }}</span>
+                                        </div>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>

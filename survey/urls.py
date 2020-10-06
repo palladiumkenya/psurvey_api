@@ -25,6 +25,7 @@ urlpatterns = [
     path('api/questionnaire/start/', views.get_consent, name='provide_consent_api'),
     path('api/questions/answer/', views.answer_question, name='provide_response_api'),
     path('api/questions/answer/<int:q_id>/', views.start_questionnaire_new, name='provide_response_one_api'),
+    path('api/initial/consent/', views.start_questionnaire_new, name='initial_consent_api'),
 
 ]
 urlpatterns += staticfiles_urlpatterns()
