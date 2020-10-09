@@ -33,10 +33,17 @@
                 <!-- Card body -->
                 <div class="card-body">
                     <div class="row">
-                        <div class="col">
-                            <h5 class="card-title text-uppercase text-muted mb-0">Number of facilities</h5>
-                            <span class="h2 font-weight-bold mb-0">{{ fac.count }}</span>
-                        </div>
+                        {% if u.access_level.id != 4 %}
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">Number of facilities</h5>
+                                <span class="h2 font-weight-bold mb-0">{{ fac.count }}</span>
+                            </div>
+                        {% else %}
+                            <div class="col">
+                                <h5 class="card-title text-uppercase text-muted mb-0">Number of Patients served</h5>
+                                <span class="h2 font-weight-bold mb-0">{{ fac }}</span>
+                            </div>
+                        {% endif %}
                         <div class="col-auto">
                             <div class="icon icon-shape bg-gradient-red text-white rounded-circle shadow">
                                 <i class="ni ni-active-40"></i>
@@ -193,7 +200,8 @@
 {% endblock %}
 {% block scripts %}
     <script type="text/javascript" src="https://cdn.jsdelivr.net/momentjs/latest/moment.min.js"></script>
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
+    <script type="text/javascript"
+            src="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.min.js"></script>
     <link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/daterangepicker/daterangepicker.css"/>
     <script>
         $(function () {

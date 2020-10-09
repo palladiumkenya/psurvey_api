@@ -288,10 +288,12 @@ def index(request):
         quest = Questionnaire.objects.filter(id__in=que)
         aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today(), id__in=que)
         resp = End_Questionnaire.objects.filter(session__started_by__facility=user.facility)
+        pat = Started_Questionnaire.objects.filter(started_by__facility=user.facility).distinct('ccc_number').count()
+        print(pat)
 
         context = {
             'u': user,
-            'fac': fac,
+            'fac': pat,
             'quest': quest,
             'aq': aq,
             'resp': resp,
