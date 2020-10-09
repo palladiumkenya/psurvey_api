@@ -94,10 +94,10 @@ def get_consent(request):
 def initial_consent(request):
     check = check_ccc(request.data['ccc_number'])
     if not check:
-        return Res({'error': False, 'message': 'ccc number doesnt exist'})
+        return Res({'error': False, 'message': 'ccc number doesnt exist'}, status=status.HTTP_200_OK)
     if check['f_name'].upper() != request.data['first_name'].upper():
-        return Res({'error': False, 'message': 'client verification failed'})
-    return Res({'success': True, 'message': "You can now start questionnaire"})
+        return Res({'error': False, 'message': 'client verification failed'}, status=status.HTTP_200_OK)
+    return Res({'success': True, 'message': "You can now start questionnaire"}, status=status.HTTP_200_OK)
 
 
 def check_ccc(value):
