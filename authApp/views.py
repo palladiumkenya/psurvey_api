@@ -128,6 +128,30 @@ def facility_partner_list(request):
 
 
 @login_required
+def facility_admin_list(request):
+    user = request.user
+    if user.access_level.id != 2:
+        raise PermissionDenied
+    partner = Users.objects.filter(access_level_id=4,
+                                   facility_id__in=Partner_Facility.objects.filter(partner_id=Partner_User.objects.get(user=user).name).values_list('facility_id', flat=True)).order_by('-date_joined')
+    print(partner)
+    page = request.GET.get('page', 1)
+    paginator = Paginator(partner, 10)
+    try:
+        partner = paginator.page(page)
+    except PageNotAnInteger:
+        partner = paginator.page(1)
+    except EmptyPage:
+        partner = paginator.page(paginator.num_pages)
+    context = {
+        'u': user,
+        'partner': partner,
+        'paginator': paginator,
+    }
+    return render(request, 'authApp/facility_admin_list.html', context)
+
+
+@login_required
 def facility_partner_link(request):
     user = request.user
     if user.access_level.id != 3:
@@ -199,6 +223,35 @@ def register_partner(request):
         'p_users': partner_users,
     }
     return render(request, 'authApp/new_partner_link.html', context)
+
+
+@login_required
+def register_fac_admin(request):
+    u = request.user
+    if request.user.access_level.id != 2:
+        raise PermissionDenied
+    facilities = Facility.objects.filter(id__in=Partner_Facility.objects.filter(partner=Partner_User.objects.get(user=u).name).values_list('facility_id', flat=True)).exclude(id__in=Users.objects.filter(access_level_id=4).values_list('facility_id', flat=True)).order_by('name')
+    if request.method == 'POST':
+        f_name = request.POST.get('f_name')
+        l_name = request.POST.get('l_name')
+        email = request.POST.get('email')
+        msisdn = request.POST.get('msisdn')
+        password = request.POST.get('password')
+        re_password = request.POST.get('re_password')
+        if password != re_password:
+            return HttpResponse("Password error")
+        user = Users.objects.create_user(msisdn=msisdn, password=password, email=email)
+        user.f_name = f_name
+        user.l_name = l_name
+        user.access_level_id = 4
+        print(user.id)
+        user.save()
+
+    context = {
+        'u': u,
+        'fac': facilities,
+    }
+    return render(request, 'authApp/new_fac_admin.html', context)
 
 
 def edit_partner(request, p_id):

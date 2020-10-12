@@ -21,6 +21,8 @@ urlpatterns = [
     path('web/facility-partner-link/', views.facility_partner_link, name='facility-partner-link'),
     path('web/designation-list/', views.designation_list, name='designation-list'),
     path('web/register-partner/', views.register_partner, name='register-partner'),
+    path('web/register-fac-admin/', views.register_fac_admin, name='register-fac-admin'),
+    path('web/list-fac-admin/', views.facility_admin_list, name='list-fac-admin'),
     path('web/edit-partner/<int:p_id>/', views.edit_partner, name='edit-partner'),
 ]
 
