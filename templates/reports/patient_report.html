@@ -127,59 +127,53 @@
                 '</table>';
         }
 
-        var as_t;
         $(document).ready(function () {
-            $.ajax({
-                type: 'get',
-                url: '/web/patients/list',
-                success: function (data) {
-                    var table = $('#users').DataTable({
-                        processing: true,
-                        "language": {
-                            processing: '<i class="ni ni-planet"></i><span class="sr-only">Loading...</span> '
-                        },
-                        "data": data,
-                        "columns": [
-                            {
-                                "className": 'details-control',
-                                "orderable": false,
-                                "data": null,
-                                "defaultContent": ''
-                            },
-                            {"data": "ccc_number"},
-                            {"data": "name"}
-                        ],
-                        "order": [[1, 'asc']]
-                    });
 
-                    // Add event listener for opening and closing details
-                    $('#users tbody').on('click', 'td.details-control', function () {
-                        var tr = $(this).closest('tr');
-                        var row = table.row(tr);
-
-
-                        if (row.child.isShown()) {
-                            // This row is already open - close it
-                            row.child.hide();
-                            tr.removeClass('shown');
-                        } else {
-                            console.log(row)
-                            row.child(format(row.data(), data)).show();
-                            tr.addClass('shown');
-                        }
-                    });
-
+            var table = $('#users').DataTable({
+                processing: true,
+                "language": {
+                    processing: '<span class="sr-only">Loading...</span> '
                 },
-                error: function (er) {
-                    console.log("Login error");
-                    // console.log(er.responseText);
-                    Swal.fire({
-                        title: 'Error occured!!',
-                        text: 'Try again!!',
-                        icon: 'error',
-                    });
+                "ajax": {
+                    "url": '/web/patients/list',
+                    dataSrc: "data",
+                    dataFilter: function (data) {
+                        var json = jQuery.parseJSON(data);
+                        console.log(json)
+
+                        return JSON.stringify(json); // return JSON string
+                    }
+                },
+                "columns": [
+                    {
+                        "className": 'details-control',
+                        "orderable": false,
+                        "data": null,
+                        "defaultContent": ''
+                    },
+                    {"data": "name"},
+                    {"data": "ccc_number"}
+                ],
+                "order": [[1, 'asc']]
+            });
+
+            // Add event listener for opening and closing details
+            $('#users tbody').on('click', 'td.details-control', function () {
+                var tr = $(this).closest('tr');
+                var row = table.row(tr);
+
+
+                if (row.child.isShown()) {
+                    // This row is already open - close it
+                    row.child.hide();
+                    tr.removeClass('shown');
+                } else {
+                    console.log(row)
+                    row.child(format(row.data())).show();
+                    tr.addClass('shown');
                 }
             });
+
 
         });
         $.fn.dataTable.ext.errMode = 'throw';
