@@ -8,7 +8,6 @@ from django.db.models import Count, Q
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
-from django_datatables_view.base_datatable_view import BaseDatatableView
 from django.utils.html import escape
 from reports.serializer import *
 from survey.models import *
@@ -118,12 +117,30 @@ class Current_user(viewsets.ModelViewSet):
         return qs
 
 
-class Patients (viewsets.ModelViewSet):
-    serializer_class = PatientSer
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def Patients (request):
+    sq = Started_Questionnaire.objects.filter(started_by__facility=request.user.facility).order_by('ccc_number')
+    print(sq)
+    ser = PatientSer(sq, many=True)
 
-    def get_queryset(self):
-        queryset = Started_Questionnaire.objects.filter(started_by__facility=self.request.user.facility)
-        return queryset
+    new_data = []
+    not_found = True
+    for item in ser.data:
+        for month in new_data:
+            not_found = True
+            if item['ccc_number'] == month['ccc_number']:
+                not_found = False
+                month['responses'].append({'data': item['responses'], 'session': item['id']})
+
+                break
+        if not_found:
+            new_data.append({'name': item['firstname'], 'ccc_number': item['ccc_number'],
+                             'responses': [{'data': item['responses'], 'session': item['id']}]})
+
+    print(new_data)
+
+    return Res(new_data)
 
 
 class RespViewSet(viewsets.ModelViewSet):

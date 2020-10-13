@@ -2,12 +2,24 @@
 {% block title %}
     Response report
 {% endblock %}
+{% block headscript %}
+    <style>
+        td.details-control {
+            background: url('https://datatables.net/examples/resources/details_open.png') no-repeat center center;
+            cursor: pointer;
+        }
+
+        tr.shown td.details-control {
+            background: url('https://datatables.net/examples/resources/details_close.png') no-repeat center center;
+        }
+    </style>
+{% endblock %}
 {% block breadcrumb %}
     <h4 class="h4 text-white d-inline-block mb-0">Reports</h4>
     <nav aria-label="breadcrumb" class="d-none d-md-inline-block ml-md-4">
         <ol class="breadcrumb breadcrumb-links breadcrumb-dark">
             <li class="breadcrumb-item"><a href="{% url 'dashboard' %}"><i class="fas fa-home"></i></a></li>
-            <li class="breadcrumb-item"><a href="."><small>Patient List</small></a></li>
+            <li class="breadcrumb-item"><a href="{% url 'patients_report' %}"><small>Patient List</small></a></li>
 
             <li class="breadcrumb-item active" aria-current="page"><small>Patient List</small></li>
         </ol>
@@ -36,18 +48,14 @@
                             <tr>
                                 <th></th>
                                 <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th>Salary</th>
+                                <th>CCC Number</th>
                             </tr>
                             </thead>
                             <tfoot>
                             <tr>
                                 <th></th>
                                 <th>Name</th>
-                                <th>Position</th>
-                                <th>Office</th>
-                                <th>Salary</th>
+                                <th>CCC Number</th>
                             </tr>
                             </tfoot>
                         </table>
@@ -67,23 +75,55 @@
 
     <script>
 
-        function format(d) {
+        function format(d, data) {
             // `d` is the original data object for the row
             console.log(d)
+            let a = "";
+            for (i in d.responses) {
+                console.log(d.responses.length)
+                for (x in d.responses[i].data) {
+                    if (d.responses[i].data.length === 0) {
+                        a = a + '<tr>' + '<td colspan="6" class="text-red"> No resposes given</td>' + '</tr>'
+
+                    } else {
+                        if (d.responses[i].data[x].question.question_type === 1) {
+                            rep = d.responses[i].data[x].open_text
+                        } else
+                            rep = d.responses[i].data[x].answer.option
+                        if (d.responses[i].data[x].question.question_type === 1)
+                            ty = "OPEN TEXT"
+                        else if (d.responses[i].data[x].question.question_type === 2)
+                            ty = "SINGLE SELECT"
+                        else if (d.responses[i].data[x].question.question_type === 3)
+                            ty = "MULTIPLE SELECT"
+                        a = a + '<tr>' +
+                            '<td>' + d.responses[i].session + '</td>' +
+                            '<td>' + d.responses[i].data[x].questionnaire.name + '</td>' +
+                            '<td>' + d.responses[i].data[x].question.question + '</td>' +
+                            '<td>' + ty + '</td>' +
+                            '<td>' + rep + '</td>' +
+                            '<td>' + d.responses[i].data[x].created_at + '</td>' +
+                            '</tr>'
+                    }
+                }
+
+            }
+            if (a === "") {
+                a = '<tr>' +
+                    '<td colspan="5" class="text-red"> No resposes given</td>' +
+                    '</tr>'
+            }
+
             return '<table cellpadding="5" cellspacing="0" border="0" style="padding-left:50px;">' +
 
-                '<tr>' +
-                '<td>Full name:</td>' +
-                '<td>' + d.firstname + '</td>' +
-                '</tr>' +
-                '<tr>' +
-                '<td>Extension number:</td>' +
-                '<td>' + d.extn + '</td>' +
-                '</tr>' +
-                '<tr>' +
-                '<td>Extra info:</td>' +
-                '<td>And any further details here (images etc)...</td>' +
-                '</tr>' +
+                '<thead>' +
+                '<th>Session</th>' +
+                '<th>Questionnaire</th>' +
+                '<th>Question</th>' +
+                '<th>Question Type</th>' +
+                '<th>Response Given</th>' +
+                '<th>Date responded</th>' +
+                '</thead>' + a +
                 '</table>';
         }
 
@@ -91,11 +131,14 @@
         $(document).ready(function () {
             $.ajax({
                 type: 'get',
-                url: '/api/patients/list/',
+                url: '/web/patients/list',
                 success: function (data) {
-                    console.log(data.results)
                     var table = $('#users').DataTable({
-                        "data": data.results,
+                        processing: true,
+                        "language": {
+                            processing: '<i class="ni ni-planet"></i><span class="sr-only">Loading...</span> '
+                        },
+                        "data": data,
                         "columns": [
                             {
                                 "className": 'details-control',
@@ -104,9 +147,7 @@
                                 "defaultContent": ''
                             },
                             {"data": "ccc_number"},
-                            {"data": "firstname"},
-                            {"data": "questionnaire"},
-                            {"data": "started_by"},
+                            {"data": "name"}
                         ],
                         "order": [[1, 'asc']]
                     });
@@ -123,7 +164,7 @@
                             tr.removeClass('shown');
                         } else {
                             console.log(row)
-                            row.child(format(row.data())).show();
+                            row.child(format(row.data(), data)).show();
                             tr.addClass('shown');
                         }
                     });
@@ -133,8 +174,8 @@
                     console.log("Login error");
                     // console.log(er.responseText);
                     Swal.fire({
-                        title: 'Wrong Login credentials!!',
-                        text: 'Username or Password does NOT exist!!',
+                        title: 'Error occured!!',
+                        text: 'Try again!!',
                         icon: 'error',
                     });
                 }

@@ -94,10 +94,10 @@ def get_consent(request):
 def initial_consent(request):
     check = check_ccc(request.data['ccc_number'])
     if not check:
-        return Res({'error': False, 'message': 'ccc number doesnt exist'})
+        return Res({'error': False, 'message': 'ccc number doesnt exist'}, status.HTTP_200_OK)
     if check['f_name'].upper() != request.data['first_name'].upper():
-        return Res({'error': False, 'message': 'client verification failed'})
-    return Res({'success': True, 'message': "You can now start questionnaire"})
+        return Res({'error': False, 'message': 'client verification failed'}, status.HTTP_200_OK)
+    return Res({'success': True, 'message': "You can now start questionnaire"}, status.HTTP_200_OK)
 
 
 
@@ -289,10 +289,11 @@ def index(request):
         quest = Questionnaire.objects.filter(id__in=que)
         aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today(), id__in=que)
         resp = End_Questionnaire.objects.filter(session__started_by__facility=user.facility)
+        pat = Started_Questionnaire.objects.filter(started_by__facility=user.facility).distinct('ccc_number').count()
 
         context = {
             'u': user,
-            'fac': fac,
+            'fac': pat,
             'quest': quest,
             'aq': aq,
             'resp': resp,

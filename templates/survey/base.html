@@ -124,6 +124,12 @@
                                     <span class="nav-link-text">Designations</span>
                                 </a>
                             {% endif %}
+                            {% if u.access_level_id == 2 %}
+                                <a class="nav-link " href="{% url 'list-fac-admin' %}  ">
+                                    <i class="ni ni-compass-04 text-black-50"></i>
+                                    <span class="nav-link-text">Faciity Administrators</span>
+                                </a>
+                            {% endif %}
                             <a class="nav-link " href="{% url 'users_report' %}  ">
                                 <i class="ni ni-satisfied text-black-50"></i>
                                 <span class="nav-link-text">Users List</span>
