@@ -140,8 +140,13 @@ def Patients (request):
                              'responses': [{'data': item['responses'], 'session': item['id']}]})
 
     print(new_data)
+    data = {
+        "recordsTotal": len(new_data),
+        "recordsFiltered": len(new_data),
+        "data": new_data,
+    }
 
-    return Res(new_data)
+    return Res(data)
 
 
 class RespViewSet(viewsets.ModelViewSet):
