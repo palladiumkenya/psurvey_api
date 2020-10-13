@@ -134,6 +134,10 @@
                 url: '/web/patients/list',
                 success: function (data) {
                     var table = $('#users').DataTable({
+                        processing: true,
+                        "language": {
+                            processing: '<i class="ni ni-planet"></i><span class="sr-only">Loading...</span> '
+                        },
                         "data": data,
                         "columns": [
                             {

@@ -236,6 +236,7 @@ def register_fac_admin(request):
         l_name = request.POST.get('l_name')
         email = request.POST.get('email')
         msisdn = request.POST.get('msisdn')
+        facility = request.POST.get('facility')
         password = request.POST.get('password')
         re_password = request.POST.get('re_password')
         if password != re_password:
@@ -244,6 +245,7 @@ def register_fac_admin(request):
         user.f_name = f_name
         user.l_name = l_name
         user.access_level_id = 4
+        user.facility_id=facility
         print(user.id)
         user.save()
 
