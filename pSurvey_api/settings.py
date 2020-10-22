@@ -79,13 +79,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 
 
-# Pagination
-# PAGINATION_SETTINGS = {
-#     'PAGE_RANGE_DISPLAYED': 1,
-#     'MARGIN_PAGES_DISPLAYED': 1,
-#
-#     'SHOW_FIRST_PAGE_WHEN_INVALID': True,
-# }
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -161,7 +154,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+TIME_ZONE = 'Africa/Nairobi'
 
 USE_I18N = True
 
