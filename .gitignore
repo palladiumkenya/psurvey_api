@@ -143,4 +143,5 @@ pSurvey_api/static
 source/_static/
 source/_templates/
 .idea/
+*/migrations
 
