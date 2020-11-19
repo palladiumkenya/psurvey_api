@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/3.1/ref/settings/
 """
 import os
 from pathlib import Path
-from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from docutils.nodes import term
@@ -46,7 +45,6 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'djoser',
-    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -81,13 +79,6 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 
 
-# Pagination
-# PAGINATION_SETTINGS = {
-#     'PAGE_RANGE_DISPLAYED': 1,
-#     'MARGIN_PAGES_DISPLAYED': 1,
-#
-#     'SHOW_FIRST_PAGE_WHEN_INVALID': True,
-# }
 
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
@@ -102,9 +93,6 @@ DATABASES = {
         'PORT': '5432',
     }
 }
-
-LOGIN_REDIRECT_URL = '/web/'
-LOGIN_URL = '/web/'
 
 AUTH_USER_MODEL = 'authApp.Users'
 
