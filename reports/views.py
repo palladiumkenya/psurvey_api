@@ -12,39 +12,6 @@ from reports.serializer import *
 from survey.models import *
 
 
-@login_required
-def index (request, q_id):
-    user =  request.user
-    question = Question.objects.get(id=q_id)
-    respo = Response.objects.filter(question_id=q_id).order_by('-id')
-    page = request.GET.get('page', 1)
-    paginator = Paginator(respo, 20)
-    try:
-        resp = paginator.page(page)
-    except PageNotAnInteger:
-        resp = paginator.page(1)
-    except EmptyPage:
-        resp = paginator.page(paginator.num_pages)
-
-    labels = []
-    data = []
-
-    queryset = Response.objects.filter(question_id=q_id).values('answer__option').annotate(count=Count('answer'))
-
-    for city in queryset:
-        labels.append(city['answer__option'])
-        data.append(city['count'])
-
-    context = {
-        'u': user,
-        'items': paginator.count,
-        'quest': question,
-        'resp': resp,
-        'labels': labels,
-        'data': data,
-    }
-    return render(request, 'reports/response_report.html', context)
-
 
 def open_end (request, q_id):
     keywords = request.POST.get('keywords')
@@ -69,29 +36,6 @@ def open_end (request, q_id):
     }
 
     return JsonResponse(context)
-
-
-def pie_chart (request):
-    labels = []
-    data = []
-
-    queryset = Response.objects.order_by('question')[:5]
-    for city in queryset:
-        labels.append(city.answer.option)
-        data.append(city.id)
-
-    return render(request, 'pie_chart.html', {
-        'labels': labels,
-        'data': data,
-    })
-
-
-def users_report (request):
-    return render(request, 'reports/user_report.html', {'u': request.user})
-
-
-def patients_report (request):
-    return render(request, 'reports/patient_report.html', {'u': request.user})
 
 
 class Current_user(viewsets.ModelViewSet):
