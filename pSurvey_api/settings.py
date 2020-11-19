@@ -94,9 +94,6 @@ DATABASES = {
     }
 }
 
-LOGIN_REDIRECT_URL = '/web/'
-LOGIN_URL = '/web/'
-
 AUTH_USER_MODEL = 'authApp.Users'
 
 REST_FRAMEWORK = {
