@@ -1,11 +1,11 @@
-# pSurvey_apis
+# psurvey api application
 
 ## Setup
 
 The first thing to do is to clone the repository:
 
 ```sh
-$ git clone https://github.com/palladiumkenya/psurvey
+$ git clone https://github.com/palladiumkenya/psurvey_api
 $ cd psurvey
 ```
 
@@ -26,7 +26,8 @@ session operates in a virtual environment set up by `virtualenv`.
 
 Once `pip` has finished downloading the dependencies:
 ```sh
-y```
+(env)$ cd pSurvey_api
+```
 
 Update database crentials save and run migrations:
 ```
@@ -40,7 +41,7 @@ Run the server:
 ```
 (env)$ python manage.py runserver
 ```
-And navigate to `http://127.0.0.1:8000/api .
+And navigate to `http://127.0.0.1:8000/api` .
 
 ALL SET.
 
