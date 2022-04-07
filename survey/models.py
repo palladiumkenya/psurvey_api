@@ -60,7 +60,7 @@ class Started_Questionnaire (models.Model):
 
 class Response (models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)
-    answer = models.ForeignKey(Answer, on_delete=models.CASCADE)
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, null=True)
     open_text = models.CharField(max_length=150, blank=True, null=True)
     session = models.ForeignKey(Started_Questionnaire, on_delete=models.CASCADE, default=1)
     created_at = models.DateField(auto_now_add=True)
