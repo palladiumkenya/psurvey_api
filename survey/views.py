@@ -51,7 +51,7 @@ def active_questionnaire_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def all_question_api(request):
-    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])
+    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id']).order_by('question_order')
     serializer = QuestionSerializer(quest, many=True)
 
     return Res({"data": serializer.data}, status.HTTP_200_OK)
@@ -69,7 +69,7 @@ def list_question_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_consent(request):
-    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id'])[:1]
+    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id']).order_by('question_order')[:1]
     a_id = 0
     for q in quest:
         a_id =q.id
@@ -94,7 +94,7 @@ def get_consent(request):
 def initial_consent(request):
     check = check_ccc(request.data['ccc_number'])
     if not check:
-        return Res({'error': False, 'message': 'ccc number doesnt exist'}, status.HTTP_200_OK)
+        return Res({'error': False, 'message': 'ccc number doesnt exist'}, status=status.HTTP_200_OK)
     if check['f_name'].upper() != request.data['first_name'].upper():
         return Res({'error': False, 'message': 'client verification failed'}, status.HTTP_200_OK)
     return Res({'success': True, 'message': "You can now start questionnaire"}, status.HTTP_200_OK)
@@ -185,6 +185,7 @@ def answer_question(request):
             else:
                 return Res({"success": False, "error": serializer.errors}, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
+            print("error", e)
             return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     return data
@@ -194,7 +195,16 @@ def check_answer_algo(ser):
     ser.save()
     q = Question.objects.get(id=ser.data['question'])
     quest = Questionnaire.objects.get(id=q.questionnaire_id)
-    questions = Question.objects.filter(questionnaire=quest)
+    question_depends_on = QuestionDependance.objects.filter(
+            question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
+        ).exclude(
+            answer_id__in=Response.objects.filter(session_id=ser.data['session']).values_list('answer_id', flat=True)
+        )
+    
+    if question_depends_on.exists():
+        questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
+    else:
+        questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
     foo = q
     previous = next_ = None
@@ -221,3 +231,4 @@ def check_answer_algo(ser):
                     "Message": "Questionnaire complete, Thank You👌!"
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
+
