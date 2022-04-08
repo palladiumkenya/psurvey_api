@@ -73,14 +73,19 @@ def get_consent(request):
     a_id = 0
     for q in quest:
         a_id =q.id
-
-    consent = Patient_Consent.objects.create(questionnaire_id=request.data['questionnaire_id'],
-                                             ccc_number=request.data['ccc_number'])
-    consent.save()
-    session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+    try:
+        if request.data['ccc_number'] :
+            consent = Patient_Consent.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                ccc_number=request.data['ccc_number'])
+            consent.save()
+        session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
                                                    started_by=request.user,
                                                    ccc_number=request.data['ccc_number'],
                                                    firstname=request.data['first_name'])
+    except KeyError:
+        session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                        started_by=request.user)
+        print()
     session.save()
     return JsonResponse({
         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
