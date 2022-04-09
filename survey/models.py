@@ -109,3 +109,12 @@ class Group_Questionnaire (models.Model):
 
     class Meta:
         db_table = "Group_Questionnaire"
+
+
+class Questionnaire_Participants (models.Model):
+    participant = models.CharField(max_length=100)
+    require_ccc_number = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        db_table = "Questionnaire_Participants"

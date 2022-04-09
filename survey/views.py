@@ -66,19 +66,19 @@ def active_questionnaire_api(request):
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                     ).values_list('questionnaire_id').distinct()
-        quest = Questionnaire.objects.filter(id__in=q, is_active=True,
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,
                                             active_till__gte=date.today()).order_by('-created_at')
     elif request.user.access_level.id == 3:
-        quest = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today()).order_by('-created_at')
+        queryset = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today()).order_by('-created_at')
     elif request.user.access_level.id == 4:
-            q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
-            quest = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
+        q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
     elif request.user.access_level.id == 5:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                     ).values_list('questionnaire_id').distinct()
-        quest = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
     
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
@@ -205,6 +205,7 @@ def answer_question(request):
                     next_ = questions[index + 1]
                     return JsonResponse({
                         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                        # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id), TODO:: Add previous link
                         "session_id": serializer.data['session']
                     })
 
@@ -261,6 +262,7 @@ def check_answer_algo(ser):
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
                     'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                    # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id), TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
