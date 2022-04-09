@@ -120,15 +120,21 @@ def get_consent(request):
         a_id =q.id
     try:
         if request.data['ccc_number'] :
-            consent = Patient_Consent.objects.create(questionnaire_id=request.data['questionnaire_id'],
-                                                ccc_number=request.data['ccc_number'])
+            consent = Patient_Consent.objects.create(
+                questionnaire_id=request.data['questionnaire_id'],
+                informed_consent=request.data['informed_consent'],
+                privacy_policy=request.data['privacy_policy'],
+                interviewer_statement=request.data['interviewer_statement'],
+                ccc_number=request.data['ccc_number'])
             consent.save()
         session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                        questionnaire_participant_id=request.data['questionnaire_participant_id'],
                                                    started_by=request.user,
                                                    ccc_number=request.data['ccc_number'],
                                                    firstname=request.data['first_name'])
     except KeyError:
         session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                        questionnaire_participant_id=request.data['questionnaire_participant_id'],
                                                         started_by=request.user)
         print()
     session.save()
