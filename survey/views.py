@@ -205,6 +205,7 @@ def answer_question(request):
                     next_ = questions[index + 1]
                     return JsonResponse({
                         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                        # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id), TODO:: Add previous link
                         "session_id": serializer.data['session']
                     })
 
@@ -261,6 +262,7 @@ def check_answer_algo(ser):
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
                     'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                    # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id), TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
