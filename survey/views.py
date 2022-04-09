@@ -133,7 +133,10 @@ def get_consent(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def initial_consent(request):
-    check = check_ccc(request.data['ccc_number'])
+    if request.data['ccc_number'] == "":
+        return Res({'success': True, 'message': "You can now start questionnaire"}, status.HTTP_200_OK)
+    else:
+        check = check_ccc(request.data['ccc_number'])
     if not check:
         return Res({'error': False, 'message': 'ccc number doesnt exist'}, status=status.HTTP_200_OK)
     if check['f_name'].upper() != request.data['first_name'].upper():
