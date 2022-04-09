@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/questionnaire/start/', views.get_consent, name='provide_consent_api'),
     path('api/questions/answer/', views.answer_question, name='provide_response_api'),
     path('api/questions/answer/<int:q_id>/', views.start_questionnaire_new, name='provide_response_one_api'),
+    path('api/questions/answer/<int:q_id>/<int:session_id>', views.previous_question, name='previous_question_api'),
     path('api/initial/consent/', views.initial_consent, name='initial_consent_api'),
 
 ]
