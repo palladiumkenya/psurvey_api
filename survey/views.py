@@ -24,6 +24,15 @@ from authApp.serializer import *
 
 
 # api
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def questionnaire_participants(request):
+    if request.method == "GET":
+        queryset = Questionnaire_Participants.objects.all()
+        serializer = QuestionnaireParticipantsSerializer(queryset, many=True)
+        return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_questionnaire_api(request):
@@ -193,7 +202,11 @@ def previous_question(request, q_id, session_id):
 @permission_classes([IsAuthenticated])
 def answer_question(request):
     q = Question.objects.get(id=request.data['question'])
-
+    is_responded = Response.objects.filter(question_id=request.data['question'], session_id=request.data['session'])
+    
+    if is_responded.exists:
+        is_responded.delete()
+        
     if q.question_type == 3:
         a = request.data.copy()
         trans_one = transaction.savepoint()
@@ -233,7 +246,7 @@ def answer_question(request):
                     next_ = questions[index + 1]
                     return JsonResponse({
                         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id if previous.id else 0, serializer.data['session']), # TODO:: Add previous link
+                        'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         "session_id": serializer.data['session']
                     })
 
@@ -290,7 +303,7 @@ def check_answer_algo(ser):
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
                     'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id if previous else 0, ser.data['session']), # TODO:: Add previous link
+                    'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous, serializer.data['session']) if previous else None, # TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
