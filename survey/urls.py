@@ -16,6 +16,7 @@ urlpatterns = [
     path('api/questions/answer/<int:q_id>/', views.start_questionnaire_new, name='provide_response_one_api'),
     path('api/previous_question/answer/<int:q_id>/<int:session_id>', views.previous_question, name='previous_question_api'),
     path('api/initial/consent/', views.initial_consent, name='initial_consent_api'),
+    path('api/questionnaire/participants/', views.questionnaire_participants, name='questionnaire_participants_api'),
 
 ]
 urlpatterns += staticfiles_urlpatterns()

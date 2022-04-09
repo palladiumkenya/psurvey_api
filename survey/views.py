@@ -24,6 +24,15 @@ from authApp.serializer import *
 
 
 # api
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def questionnaire_participants(request):
+    if request.method == "GET":
+        queryset = Questionnaire_Participants.objects.all()
+        serializer = QuestionnaireParticipantsSerializer(queryset, many=True)
+        return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_questionnaire_api(request):

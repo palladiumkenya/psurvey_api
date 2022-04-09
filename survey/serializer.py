@@ -8,7 +8,10 @@ class QuestionnaireSerializer(serializers.ModelSerializer):
         model = Questionnaire
         fields = '__all__'
 
-
+class QuestionnaireParticipantsSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Questionnaire_Participants
+        fields = '__all__'
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
