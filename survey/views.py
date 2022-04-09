@@ -275,7 +275,7 @@ def check_answer_algo(ser):
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
                     'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}/{}'.format(previous.id, serializer.data['session']), # TODO:: Add previous link
+                    'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}/{}'.format(previous.id if previous.id else 0, serializer.data['session']), # TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
