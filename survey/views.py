@@ -56,10 +56,30 @@ def all_questionnaire_api(request):
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def active_questionnaire_api(request):
-    quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+    if request.user.access_level.id == 1:
+        quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
 
-    queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True,
-                                            active_till__gte=date.today()).order_by('active_till')
+        queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True,
+                                            active_till__gte=date.today())
+    elif request.user.access_level.id == 2:
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                    ).values_list('questionnaire_id').distinct()
+        quest = Questionnaire.objects.filter(id__in=q,, is_active=True,
+                                            active_till__gte=date.today()).order_by('-created_at')
+    elif request.user.access_level.id == 3:
+        quest = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today()).order_by('-created_at')
+    elif request.user.access_level.id == 4:
+            q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+            quest = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
+    elif request.user.access_level.id == 5:
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                    ).values_list('questionnaire_id').distinct()
+        quest = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at')
+    
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
