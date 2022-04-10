@@ -16,8 +16,8 @@ class FacilitySerializer(serializers.ModelSerializer):
 
 
 class MyUserSerializer(UserSerializer):
-    designation = DesignationSerializer(read_only=True)
-    facility = FacilitySerializer(read_only=True)
+    designation = DesignationSerializer(read_only=True, allow_null=True, required=False)
+    facility = FacilitySerializer(read_only=True, allow_null=True, required=False)
     class Meta:
         model=Users
         fields = ['id', 'msisdn', 'email', 'f_name', 'l_name', 'designation', 'facility']
