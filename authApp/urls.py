@@ -6,6 +6,8 @@ from . import views
 from django.urls import path
 
 urlpatterns = [
+    path('api/informed', views.informed, name='informed'),
+    path('api/privacy', views.privacy, name='privacy'),
     # api
     path('api/facilities/', views.facilities),
     path('api/facility/single/', views.facility_single),

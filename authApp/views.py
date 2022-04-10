@@ -1,3 +1,4 @@
+from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework import status, views
@@ -10,6 +11,14 @@ from .forms import LoginForm
 from .serializer import *
 from .models import *
 from survey.models import *
+
+
+def informed(request):
+    return render(request, 'informed.html')
+
+
+def privacy(request):
+    return render(request, 'privacy.html')
 
 
 # api
