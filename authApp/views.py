@@ -14,11 +14,11 @@ from survey.models import *
 
 
 def informed(request):
-    return render(request, 'informed.html')
+    return render(request, 'authApp/informed.html')
 
 
 def privacy(request):
-    return render(request, 'privacy.html')
+    return render(request, 'authApp/privacy.html')
 
 
 # api
