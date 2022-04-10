@@ -1,3 +1,4 @@
+from re import A
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -60,9 +61,29 @@ def current_user(request):
     if request.method == "GET":
         queryset = Users.objects.get(id=request.user.id)
         serializer = MyUserSerializer(queryset)
-        aq = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id,
-                                                   questionnaire__is_active=True,
-                                                   questionnaire__active_till__gte=date.today()).count()
+        if request.user.access_level.id == 1:
+            aq = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id,
+                                                    questionnaire__is_active=True,
+                                                    questionnaire__active_till__gte=date.today()).count()
+        
+        elif request.user.access_level.id == 2:
+            fac = Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+            aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True),
+                                                    questionnaire__is_active=True,
+                                                    questionnaire__active_till__gte=date.today()).count()
+        elif request.user.access_level.id == 3:
+            aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+        elif request.user.access_level.id == 4:
+            q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+            aq = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+        elif request.user.access_level.id == 5:
+            fac = Partner_Facility.objects.filter(
+                partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+            q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                        ).values_list('questionnaire_id').distinct()        
+            aq= Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+            
         cs = End_Questionnaire.objects.filter(session__started_by=request.user).count()
         return Res({'user': serializer.data, 'Active_questionnaires': aq, 'Completed_surveys': cs},
                    status=status.HTTP_200_OK)
