@@ -131,12 +131,10 @@ def get_consent(request):
                                                    started_by=request.user,
                                                    ccc_number=request.data['ccc_number'],
                                                    firstname=request.data['first_name'])
+        session.save()
     except KeyError:
-        session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
-                                                        questionnaire_participant_id=request.data['questionnaire_participant_id'],
-                                                        started_by=request.user)
-        print()
-    session.save()
+        return Res({'error': False, 'message': 'Cannot start Questionnaire, Provide consent again'}, status.HTTP_400_BAD_REQUEST)
+        
     return JsonResponse({
         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
         'session': session.pk
