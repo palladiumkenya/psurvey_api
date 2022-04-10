@@ -118,22 +118,19 @@ def get_consent(request):
     a_id = 0
     for q in quest:
         a_id =q.id
-    try:
-        consent = Patient_Consent.objects.create(
-            questionnaire_id=request.data['questionnaire_id'],
-            informed_consent=request.data['informed_consent'],
-            privacy_policy=request.data['privacy_policy'],
-            interviewer_statement=request.data['interviewer_statement'],
-            ccc_number=request.data['ccc_number'])
-        consent.save()
-        session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
-                                                        questionnaire_participant_id=request.data['questionnaire_participant_id'],
-                                                   started_by=request.user,
-                                                   ccc_number=request.data['ccc_number'],
-                                                   firstname=request.data['first_name'])
-        session.save()
-    except KeyError:
-        return Res({'error': False, 'message': 'Cannot start Questionnaire, Provide consent again'}, status.HTTP_400_BAD_REQUEST)
+    consent = Patient_Consent.objects.create(
+        questionnaire_id=request.data['questionnaire_id'],
+        informed_consent=request.data['informed_consent'],
+        privacy_policy=request.data['privacy_policy'],
+        interviewer_statement=request.data['interviewer_statement'],
+        ccc_number=request.data['ccc_number'])
+    consent.save()
+    session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
+                                                    questionnaire_participant_id=request.data['questionnaire_participant_id'],
+                                                started_by=request.user,
+                                                ccc_number=request.data['ccc_number'],
+                                                firstname=request.data['first_name'])
+    session.save()
         
     return JsonResponse({
         'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
