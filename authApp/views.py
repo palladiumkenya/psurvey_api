@@ -72,17 +72,24 @@ def current_user(request):
             aq = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True),
                                                     questionnaire__is_active=True,
                                                     questionnaire__active_till__gte=date.today()).count()
+            serializer.data.update({"designation": {"id": 2, "name": "Implementing Partner"}})
+            serializer.data.update({"facility": {"id": 2, "name": Partner.objects.get(id=Partner_User.objects.get(user=request.user).name).name}})
         elif request.user.access_level.id == 3:
             aq = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+            serializer.data.update({"designation": {"id": 3, "name": "National User"}})
+            serializer.data.update({"facility": {"id": 2, "name": "N/A"}})
         elif request.user.access_level.id == 4:
             q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
             aq = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+            serializer.data.update({"designation": {"id": 2, "name": "Facility User"}})
         elif request.user.access_level.id == 5:
             fac = Partner_Facility.objects.filter(
                 partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
             q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                         ).values_list('questionnaire_id').distinct()        
             aq= Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today()).order_by('-created_at').count()
+            serializer.data.update({"designation": {"id": 5, "name": "Implementing Partner"}})
+            serializer.data.update({"facility": {"id": 2, "name": Partner.objects.get(id=Partner_User.objects.get(user=request.user).name).name}})
             
         cs = End_Questionnaire.objects.filter(session__started_by=request.user).count()
         return Res({'user': serializer.data, 'Active_questionnaires': aq, 'Completed_surveys': cs},
