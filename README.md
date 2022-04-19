@@ -50,7 +50,7 @@ ALL SET.
     git clone https://github.com/palladiumkenya/psurvey_api.git
     cd psurvey_api
     docker-compose up -d
-    You can now access the server at http://localhost:8100
+    You can now access the server at http://localhost:9000
 
 ## Tests
 
