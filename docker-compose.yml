@@ -1,0 +1,61 @@
+version: '3'
+
+networks:
+  psurveyapi:
+  
+services:
+  database:
+    image: postgres:13.1-alpine
+    container_name: psurveyapidb
+    restart: unless-stopped
+    tty: true
+    ports:
+      - 5434:5432
+    environment:
+      - POSTGRES_USER=psurveyapi
+      - POSTGRES_PASSWORD=psurveyapi
+      - POSTGRES_DB=psurveyapi
+    networks:
+      - psurveyapi
+
+  pythonpsurvey:
+    build:
+      context: .
+      dockerfile: python.dockerfile
+    container_name: psurvey-api      
+    restart: unless-stopped
+    volumes:
+      - .:/project    
+    depends_on:
+      - database
+    expose:
+      - 9000
+    networks:
+      - psurveyapi
+      
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/"]
+    command:
+      - /bin/bash
+      - -c
+      - |
+        sleep 10
+        python manage.py makemigrations --merge
+        sleep 10
+        python manage.py migrate --noinput
+        sleep 10
+        python manage.py runserver 0.0.0.0:9000 
+
+  site: 
+    build:
+      context: .
+      dockerfile: nginx.dockerfile
+    container_name: psurveyapi-nginx
+    restart: unless-stopped
+    ports:
+      - "9000:443"
+    depends_on:
+      - pythonpsurvey
+      - database
+    networks:
+      - psurveyapi        
