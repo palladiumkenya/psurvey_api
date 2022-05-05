@@ -1,0 +1,30 @@
+name: deploy to production
+on:
+  push:
+    branches: [ master ]
+jobs:
+
+  build:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+    - name: executing remote connection
+      uses: appleboy/ssh-action@master
+      with:
+        host: ${{ secrets.HOST }}
+        username: ${{ secrets.USERNAME }}
+        key: ${{ secrets.CICD_SECRET }}
+        port: ${{ secrets.PORT }}
+        script: |
+          git config --global --add safe.directory /apps/github-workflows/psurvey_api      
+          cd /apps/github-workflows/psurvey_api
+          git pull origin master
+          git status
+          cp /apps/dockerApps/psurvey_api/python.dockerfile /apps/github-workflows/psurvey_api
+          cp /apps/dockerApps/psurvey_api/nginx.dockerfile /apps/github-workflows/psurvey_api
+          cp /apps/dockerApps/psurvey_api/docker-compose.yml /apps/github-workflows/psurvey_api
+        
+          cp -r /apps/dockerApps/psurvey_api/docker/ /apps/github-workflows/psurvey_api
+          docker-compose down
+          docker-compose rm -f
+          docker-compose up --build -d 
