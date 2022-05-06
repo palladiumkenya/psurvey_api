@@ -22,7 +22,7 @@ jobs:
           git status
           cp  /apps/dockerApps/psurvey_api/python.dockerfile /apps/github-workflows/mhealth-apps/psurvey_api
           cp  /apps/dockerApps/psurvey_api/nginx.dockerfile /apps/github-workflows/mhealth-apps/psurvey_api
-          cp  /apps/configs/psurvey_api/docker-compose.yml /apps/github-workflows/mhealth-apps/psurvey_api
+          cp  /apps/dockerApps/psurvey_api/docker-compose.yml /apps/github-workflows/mhealth-apps/psurvey_api
           cp -r /apps/dockerApps/psurvey_api/docker/ /apps/github-workflows/mhealth-apps/psurvey_api
           docker-compose down
           docker-compose rm -f
