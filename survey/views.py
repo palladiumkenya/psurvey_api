@@ -318,3 +318,32 @@ def check_answer_algo(ser):
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+#fetch all questions
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_questionnaire_all(request, q_id):
+    quest = Question.objects.filter(questionnaire=q_id)
+    q_details = QuestionSetSerializer(quest,many=True)
+    return Res({"Questions":q_details.data}, status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_answers_all(request, qn_id):
+    qn_answer = Answer.objects.filter(question_id=qn_id)
+    answers_details = AnswerAllSerializer(qn_answer,many=True)
+    
+    return Res({"Answers":answers_details.data}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_qdependancy_all(request, qn_id):
+    dep_answer = QuestionDependance.objects.filter(question_id=qn_id)
+    dependancy_details= DependancySerializer(dep_answer,many=True)
+    
+    return Res({"Dependancy":dependancy_details.data}, status.HTTP_200_OK)

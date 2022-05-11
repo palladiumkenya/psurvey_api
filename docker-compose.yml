@@ -10,7 +10,7 @@ services:
     restart: unless-stopped
     tty: true
     ports:
-      - 5434:5432
+      - 5489:5432
     environment:
       - POSTGRES_USER=psurveyapi
       - POSTGRES_PASSWORD=psurveyapi

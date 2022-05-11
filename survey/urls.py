@@ -18,5 +18,11 @@ urlpatterns = [
     path('api/initial/consent/', views.initial_consent, name='initial_consent_api'),
     path('api/questionnaire/participants/', views.questionnaire_participants, name='questionnaire_participants_api'),
 
+    #new api to fetch all questions
+    path('api/questions_all/<int:q_id>/', views.get_questionnaire_all, name='get_questionnaire_all_api'),
+    path('api/answers_options/<int:qn_id>/', views.get_answers_all, name='get_answers_all_api'),
+    path('api/qdependancy_options/<int:qn_id>/', views.get_qdependancy_all, name='get_qdependancy_all_api'),
+
+
 ]
 urlpatterns += staticfiles_urlpatterns()

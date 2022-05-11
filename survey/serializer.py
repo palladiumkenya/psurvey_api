@@ -66,3 +66,34 @@ class AnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Answer
         fields = '__all__'
+
+class AnswerAllSerializer(serializers.ModelSerializer):
+    Answer_ID = serializers.IntegerField(source='id')
+    AnswerName = serializers.CharField(source='option')
+    class Meta:
+        model = Answer
+        fields = ('Answer_ID', 'AnswerName')
+
+class DependancySerializer(serializers.ModelSerializer):
+    Dependancy_ID = serializers.IntegerField(source='id')
+    Answer_ID = serializers.IntegerField(source='answer_id')
+    Question_ID = serializers.CharField(source='question_id')
+    class Meta:
+        model = QuestionDependance
+        fields = ('Dependancy_ID','Answer_ID', 'Question_ID')
+
+
+class QuestionSetSerializer(serializers.ModelSerializer):
+    Question_ID = serializers.IntegerField(source='id')
+    QuestionName = serializers.CharField(source='question')
+    QuestionOrder= serializers.CharField(source='question_order')
+    QuestionType= serializers.CharField(source='question_type')
+    
+    class Meta:
+        model = Question
+        fields = ('Question_ID', 'QuestionName', 'QuestionOrder','QuestionType')
+       
+        
+
+
+
