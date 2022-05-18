@@ -135,7 +135,8 @@ def get_consent(request):
     session.save()
         
     return JsonResponse({
-        'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
+        #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
+        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(a_id),
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
@@ -247,8 +248,11 @@ def answer_question(request):
                 if index < (l - 1):
                     next_ = questions[index + 1]
                     return JsonResponse({
-                        'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                        #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        
+                        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
+                        'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         "session_id": serializer.data['session']
                     })
 
@@ -304,8 +308,10 @@ def check_answer_algo(ser):
                 queryset = Answer.objects.filter(question=next_)
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
-                    'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                    #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
+                    'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
