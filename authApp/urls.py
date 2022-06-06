@@ -6,6 +6,7 @@ from . import views
 from django.urls import path
 
 urlpatterns = [
+    path('', views.home,name='home'),
     path('api/informed', views.informed, name='informed'),
     path('api/privacy', views.privacy, name='privacy'),
     # api
