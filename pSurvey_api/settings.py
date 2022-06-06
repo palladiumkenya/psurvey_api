@@ -86,10 +86,10 @@ WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'pSurvey',
-        'USER': 'nishauri',
-        'PASSWORD': 'nishauri',
-        'HOST': 'localhost',  # Or an IP Address that your DB is hosted on
+        'NAME': 'psurveyapi',
+        'USER': 'psurveyapi',
+        'PASSWORD': 'psurveyapi',
+        'HOST': 'psurveyapidb',  # Or an IP Address that your DB is hosted on
         'PORT': '5432',
     }
 }

@@ -136,7 +136,7 @@ def get_consent(request):
         
     return JsonResponse({
         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
-        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(a_id),
+        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
@@ -251,8 +251,8 @@ def answer_question(request):
                         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                         #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         
-                        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                        'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         "session_id": serializer.data['session']
                     })
 
@@ -310,8 +310,8 @@ def check_answer_algo(ser):
                 return JsonResponse({
                     #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-                    'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                    'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
                     "session_id": ser.data['session']
                 })
 
@@ -324,3 +324,32 @@ def check_answer_algo(ser):
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
+
+
+#fetch all questions
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_questionnaire_all(request, q_id):
+    quest = Question.objects.filter(questionnaire=q_id)
+    q_details = QuestionSetSerializer(quest,many=True)
+    return Res({"Questions":q_details.data}, status.HTTP_200_OK)
+
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_answers_all(request, qn_id):
+    qn_answer = Answer.objects.filter(question_id=qn_id)
+    answers_details = AnswerAllSerializer(qn_answer,many=True)
+    
+    return Res({"Answers":answers_details.data}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def get_qdependancy_all(request, qn_id):
+    dep_answer = QuestionDependance.objects.filter(question_id=qn_id)
+    dependancy_details= DependancySerializer(dep_answer,many=True)
+    
+    return Res({"Dependancy":dependancy_details.data}, status.HTTP_200_OK)
