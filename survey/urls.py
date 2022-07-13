@@ -22,6 +22,8 @@ urlpatterns = [
     path('api/questions_all/<int:q_id>/', views.get_questionnaire_all, name='get_questionnaire_all_api'),
     path('api/answers_options/<int:qn_id>/', views.get_answers_all, name='get_answers_all_api'),
     path('api/qdependancy_options/<int:qn_id>/', views.get_qdependancy_all, name='get_qdependancy_all_api'),
+    
+    path('api/questions/dep/all', views.get_question_ans_dep, name='get_qdependancy_all_api'),
 
 
 ]

@@ -353,3 +353,12 @@ def get_qdependancy_all(request, qn_id):
     dependancy_details= DependancySerializer(dep_answer,many=True)
     
     return Res({"Dependancy":dependancy_details.data}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_question_ans_dep(request):
+    quest = Questionnaire.objects.filter(is_active=True)
+    
+    data = QuestionAnswDepSerializer(quest, many=True)
+    return Res({"Questions":data.data}, status.HTTP_200_OK)
+    
