@@ -360,5 +360,5 @@ def get_question_ans_dep(request):
     quest = Questionnaire.objects.filter(is_active=True)
     
     data = QuestionAnswDepSerializer(quest, many=True)
-    return Res({"Questions":data.data}, status.HTTP_200_OK)
+    return Res(data.data, status.HTTP_200_OK)
     

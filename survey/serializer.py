@@ -132,4 +132,4 @@ class QuestionAnswDepSerializer(serializers.ModelSerializer):
     class Meta:
         model = Questionnaire
         fields = ('__all__')
-        # fields = ('id', 'name', 'description', 'is_active', 'number_of_questions', 'active_till', 'created_by', 'created_at', 'questions')
+        
