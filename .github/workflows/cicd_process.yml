@@ -1,7 +1,7 @@
 name: deploy to test instance
 on:
   push:
-    branches: [ cicd ]
+    branches: [cicd]
 jobs:
 
   build:
@@ -16,9 +16,13 @@ jobs:
         key: ${{ secrets.CICD_SECRET }}
         port: ${{ secrets.PORT }}
         script: |
+          cd  /apps/github-workflows/mhealth-apps/
+          sudo rm -rf psurvey_api
+          sudo mkdir psurvey_api
+          sudo chown -R cicd2:cicd2 psurvey_api
           git config --global --add safe.directory /apps/github-workflows/mhealth-apps/psurvey_api    
-          cd /apps/github-workflows/mhealth-apps/psurvey_api/
-          git pull origin cicd
+          cd psurvey_api/
+          git clone -b cicd https://github.com/palladiumkenya/psurvey_api.git .
           git status
           cp  /apps/dockerApps/psurvey_api/python.dockerfile /apps/github-workflows/mhealth-apps/psurvey_api
           cp  /apps/dockerApps/psurvey_api/nginx.dockerfile /apps/github-workflows/mhealth-apps/psurvey_api
