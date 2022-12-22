@@ -176,13 +176,33 @@ def check_ccc(value):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def start_questionnaire_new(request, q_id):
+def start_questionnaire_new(request, q_id, session_id):
     quest = Question.objects.get(id=q_id)
+
+    repeat_count = 0
+    # if this question is repeatable
+    if quest.is_repeatable:
+        # get the question dependancy details
+        dep_question = QuestionDependance.objects.filter(question=quest)
+        answer_id = dep_question.answer
+
+        # get the parent question from Answers
+        parent_quest = Answer.objects.get(id = answer_id)
+        parent_quest_id = parent_quest.question
+
+        # get the parent question's response
+        resp = Response.objects.filter(question_id=parent_quest_id, session_id=session_id)
+        resp_answer_id = resp.answer
+
+         # get the response's answer value
+        resp_answer = Answer.objects.get(id = resp_answer_id)
+        repeat_count = resp_answer.option
+
     serializer = QuestionSerializer(quest)
     queryset = Answer.objects.filter(question_id=quest)
     ser = AnswerSerializer(queryset, many=True)
 
-    return Res({"Question": serializer.data, "Ans": ser.data}, status.HTTP_200_OK)
+    return Res({"Question": serializer.data, "Ans": ser.data,"repeat_count" : repeat_count}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
