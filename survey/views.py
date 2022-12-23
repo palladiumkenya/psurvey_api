@@ -183,16 +183,18 @@ def start_questionnaire_new(request, q_id, session_id):
     # if this question is repeatable
     if quest.is_repeatable:
         # get the question dependancy details
-        dep_question = QuestionDependance.objects.filter(question=quest)
-        answer_id = dep_question.answer
+        dep_questions = QuestionDependance.objects.filter(question=quest)
+        for dep_question in dep_questions:
+            answer_id = dep_question.answer_id
 
         # get the parent question from Answers
         parent_quest = Answer.objects.get(id = answer_id)
-        parent_quest_id = parent_quest.question
+        parent_quest_id = parent_quest.question_id
 
         # get the parent question's response
-        resp = Response.objects.filter(question_id=parent_quest_id, session_id=session_id)
-        resp_answer_id = resp.answer
+        responses = Response.objects.filter(question_id=parent_quest_id, session_id=session_id)
+        for response in responses:
+            resp_answer_id = response.answer_id
 
          # get the response's answer value
         resp_answer = Answer.objects.get(id = resp_answer_id)
