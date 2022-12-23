@@ -180,6 +180,8 @@ def start_questionnaire_new(request, q_id, session_id):
     quest = Question.objects.get(id=q_id)
 
     repeat_count = 0
+    answer_id = 0
+    resp_answer_id = 0
     # if this question is repeatable
     if quest.is_repeatable:
         # get the question dependancy details
