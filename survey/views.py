@@ -336,8 +336,8 @@ def check_answer_algo(ser):
                 if que.is_repeatable:
                     q_is_repeatable = True
         
-        if q_is_repeatable:
-            questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+            if q_is_repeatable:
+                questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
            
     else:
         questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
