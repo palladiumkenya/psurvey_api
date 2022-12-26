@@ -317,14 +317,28 @@ def check_answer_algo(ser):
         )
 
     if question_depends_on.exists():
-        # perform the repeatable check
-        # Check if the question has a dependency that is repeatable
-        dependancy_repeatable = Question.objects.filter(id__in=QuestionDependance.objects.filter(answer_id__in=Answer.objects.filter(question_id=q.id).values_list('answer_id', flat=True)).values_list('question_id', flat=True),is_repeatable=True)
+        questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
 
-        if dependancy_repeatable.exists():
+        # perform the repeatable check
+        # get all answers for the current question
+        ans = Answer.objects.filter(question_id=q.id)
+
+        #check if the answers are in the dependancy table
+        ans_dep = QuestionDependance.objects.filter(answer_id__in=ans.values_list('id', flat=True))
+
+        if ans_dep.exists():
+            # get the questions connected by this dependancy
+            que_dep = Question.objects.filter(id__in=ans_dep.values_list('question_id', flat=True))
+
+            #check if any of these questions are repeatable
+            q_is_repeatable = False
+            for que in que_dep:
+                if que.is_repeatable:
+                    q_is_repeatable = True
+        
+        if q_is_repeatable:
             questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
-        else:
-            questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
+           
     else:
         questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
