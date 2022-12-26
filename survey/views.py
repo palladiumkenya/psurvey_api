@@ -307,15 +307,24 @@ def answer_question(request):
 def check_answer_algo(ser):
     ser.save()
     q = Question.objects.get(id=ser.data['question'])
-    quest = Questionnaire.objects.get(id=q.questionnaire_id)
+    quest = Questionnaire.objects.get(id=q.questionnaire_id)        
+    questions = None
+
     question_depends_on = QuestionDependance.objects.filter(
             question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
         ).exclude(
             answer_id__in=Response.objects.filter(session_id=ser.data['session']).values_list('answer_id', flat=True)
         )
-    
+
     if question_depends_on.exists():
-        questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
+        # perform the repeatable check
+        # Check if the question has a dependency that is repeatable
+        dependancy_repeatable = Question.objects.filter(id__in=QuestionDependance.objects.filter(answer_id__in=Answer.objects.filter(question_id=q.id).values_list('answer_id', flat=True)).values_list('question_id', flat=True),is_repeatable=True)
+
+        if dependancy_repeatable.exists():
+            questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+        else:
+            questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
     else:
         questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
