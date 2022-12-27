@@ -182,12 +182,15 @@ def start_questionnaire_new(request, q_id, session_id):
     repeat_count = 0
     answer_id = 0
     resp_answer_id = 0
+    dep_q_id = 0
+
     # if this question is repeatable
     if quest.is_repeatable:
         # get the question dependancy details
         dep_questions = QuestionDependance.objects.filter(question=quest)
         for dep_question in dep_questions:
             answer_id = dep_question.answer_id
+            dep_q_id = dep_question.id
 
         # get the parent question from Answers
         parent_quest = Answer.objects.get(id = answer_id)
@@ -201,6 +204,11 @@ def start_questionnaire_new(request, q_id, session_id):
          # get the response's answer value
         resp_answer = Answer.objects.get(id = resp_answer_id)
         repeat_count = resp_answer.option
+
+        # update the dependancy with the parent question's response
+        dep_q = QuestionDependance.objects.get(id=dep_q_id)
+        dep_q.answer_id = resp_answer_id
+        dep_q.save()
 
     serializer = QuestionSerializer(quest)
     queryset = Answer.objects.filter(question_id=quest)
@@ -340,13 +348,8 @@ def check_answer_algo(ser):
                     q_is_repeatable = True
         
             if q_is_repeatable:
-                questions = Question.objects.filter(questionnaire=quest).order_by("question_order")         
-   
-        else:
-            # not in dependancy? check if the current question has a reponse
-            if Response.objects.filter(question_id=q.id).exists():
-                questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
-
+                questions = Question.objects.filter(questionnaire=quest).order_by("question_order") 
+                
     foo = q
     previous = next_ = None
     l = len(questions)
