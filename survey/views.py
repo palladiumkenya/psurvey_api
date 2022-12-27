@@ -269,6 +269,9 @@ def answer_question(request):
             if obj == foo:
                 if index > 0:
                     previous = questions[index - 1]
+                else:
+                    previous = questions[index]
+
                 if index < (l - 1):
                     next_ = questions[index + 1]
                     return JsonResponse({
@@ -308,7 +311,7 @@ def check_answer_algo(ser):
     ser.save()
     q = Question.objects.get(id=ser.data['question'])
     quest = Questionnaire.objects.get(id=q.questionnaire_id)        
-    questions = None
+    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
     question_depends_on = QuestionDependance.objects.filter(
             question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
@@ -337,10 +340,12 @@ def check_answer_algo(ser):
                     q_is_repeatable = True
         
             if q_is_repeatable:
+                questions = Question.objects.filter(questionnaire=quest).order_by("question_order")         
+   
+        else:
+            # not in dependancy? check if the current question has a reponse
+            if Response.objects.filter(question_id=q.id).exists():
                 questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
-           
-    else:
-        questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
     foo = q
     previous = next_ = None
@@ -348,7 +353,10 @@ def check_answer_algo(ser):
     for index, obj in enumerate(questions):
         if obj == foo:
             if index > 0:
-                previous = questions[index - 1]
+                previous = questions[index - 1]                   
+            else:
+                previous = questions[index]
+
             if index < (l - 1):
                 next_ = questions[index + 1]
                 serializer = QuestionSerializer(next_)
