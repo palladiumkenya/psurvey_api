@@ -203,12 +203,7 @@ def start_questionnaire_new(request, q_id, session_id):
 
          # get the response's answer value
         resp_answer = Answer.objects.get(id = resp_answer_id)
-        repeat_count = resp_answer.option
-
-        # update the dependancy with the parent question's response
-        dep_q = QuestionDependance.objects.get(id=dep_q_id)
-        dep_q.answer_id = resp_answer_id
-        dep_q.save()
+        repeat_count = resp_answer.option        
 
     serializer = QuestionSerializer(quest)
     queryset = Answer.objects.filter(question_id=quest)
@@ -349,6 +344,12 @@ def check_answer_algo(ser):
         
             if q_is_repeatable:
                 questions = Question.objects.filter(questionnaire=quest).order_by("question_order") 
+        else:
+            # check if this question is in the dependancy table and has a response
+             if QuestionDependance.objects.filter(question_id=q.id).exists():
+                if Response.objects.filter(session_id=ser.data['session'],question_id=q.id).exists():
+                    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+
                 
     foo = q
     previous = next_ = None
