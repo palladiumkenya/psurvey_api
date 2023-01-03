@@ -17,6 +17,8 @@ services:
       - POSTGRES_DB=psurveyapi
     networks:
       - psurveyapi
+    volumes:
+      - ../scripts/psurvey.sql:/docker-entrypoint-initdb.d/psurvey.sql
 
   pythonpsurvey:
     build:
@@ -28,8 +30,8 @@ services:
       - .:/project    
     depends_on:
       - database
-    expose:
-      - 9000
+    ports:
+      - 9000:9000
     networks:
       - psurveyapi
       
@@ -63,16 +65,17 @@ services:
         sleep 10
         python manage.py runserver 0.0.0.0:9000 
 
-  site: 
-    build:
-      context: .
-      dockerfile: nginx.dockerfile
-    container_name: psurveyapi-nginx
-    restart: unless-stopped
-    ports:
-      - "9000:443"
-    depends_on:
-      - pythonpsurvey
-      - database
-    networks:
-      - psurveyapi        
+  # site: 
+  #   build:
+  #     context: .
+  #     dockerfile: nginx.dockerfile
+  #   container_name: psurveyapi-nginx
+  #   restart: unless-stopped
+  #   ports:
+  #     - "9000:443"
+  #   depends_on:
+  #     - pythonpsurvey
+  #     - database
+  #   networks:
+  #     - psurveyapi        
+

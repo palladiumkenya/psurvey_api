@@ -145,3 +145,4 @@ source/_templates/
 .idea/
 */migrations
 
+docker/
