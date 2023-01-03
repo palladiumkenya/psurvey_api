@@ -92,8 +92,44 @@ class QuestionSetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
         fields = ('Question_ID', 'QuestionName', 'QuestionOrder','QuestionType')
-       
+
+
+
+
+class DependancySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionDependance
+        fields = '__all__'
+
+
+class AnswersSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Answer
+        fields = '__all__'
+
+
+class QuestionsSerializer(serializers.ModelSerializer):
+    answers = serializers.SerializerMethodField()
+    dependancy_details = serializers.SerializerMethodField()
+    def get_answers(self, obj):
+        return AnswersSerializer(obj.answer_set.all(), many=True).data
+    
+    def get_dependancy_details(self, obj):
+        return DependancySerializer(obj.questiondependance_set.all(), many=True).data
+    
+    class Meta:
+        model = Question
+        fields = '__all__'
+
+
+class QuestionAnswDepSerializer(serializers.ModelSerializer):
+    questions = serializers.SerializerMethodField() 
+    # Questions = serializers.SerializerMethodField()
+    
+    def get_questions(self, instance):
+        return QuestionsSerializer(instance.question_set.all().order_by('question_order'), many=True).data
+
+    class Meta:
+        model = Questionnaire
+        fields = ('__all__')
         
-
-
-

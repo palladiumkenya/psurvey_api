@@ -53,7 +53,7 @@
                     </div>
                 </div>
                 <div class="card-body">
-                    {% if quest.question_type != 1 %}
+                    {% if quest.question_type == 2 or quest.question_type == 3 %}
                         <!-- Chart -->
                         <div class="chart" id="container" style="width: 50%;">
                             <canvas id="pie-chart"></canvas>

@@ -13,7 +13,7 @@ urlpatterns = [
     path('api/questions/list/', views.list_question_api, name='list_question_api'),
     path('api/questionnaire/start/', views.get_consent, name='provide_consent_api'),
     path('api/questions/answer/', views.answer_question, name='provide_response_api'),
-    path('api/questions/answer/<int:q_id>/', views.start_questionnaire_new, name='provide_response_one_api'),
+    path('api/questions/answer/<int:q_id>/<int:session_id>', views.start_questionnaire_new, name='provide_response_one_api'),
     path('api/previous_question/answer/<int:q_id>/<int:session_id>', views.previous_question, name='previous_question_api'),
     path('api/initial/consent/', views.initial_consent, name='initial_consent_api'),
     path('api/questionnaire/participants/', views.questionnaire_participants, name='questionnaire_participants_api'),
@@ -22,6 +22,8 @@ urlpatterns = [
     path('api/questions_all/<int:q_id>/', views.get_questionnaire_all, name='get_questionnaire_all_api'),
     path('api/answers_options/<int:qn_id>/', views.get_answers_all, name='get_answers_all_api'),
     path('api/qdependancy_options/<int:qn_id>/', views.get_qdependancy_all, name='get_qdependancy_all_api'),
+    
+    path('api/questions/dep/all', views.get_question_ans_dep, name='get_qdependancy_all_api'),
 
 
 ]

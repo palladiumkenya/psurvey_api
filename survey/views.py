@@ -136,7 +136,9 @@ def get_consent(request):
         
     return JsonResponse({
         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
-        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(a_id),
+        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
+
+
         'session': session.pk
     })
     # return Res({"Question": serializer.data, "Ans": ser.data, "session_id": session.pk}, status.HTTP_200_OK)
@@ -176,13 +178,40 @@ def check_ccc(value):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def start_questionnaire_new(request, q_id):
+def start_questionnaire_new(request, q_id, session_id):
     quest = Question.objects.get(id=q_id)
+
+    repeat_count = 0
+    answer_id = 0
+    resp_answer_id = 0
+    dep_q_id = 0
+
+    # if this question is repeatable
+    if quest.is_repeatable:
+        # get the question dependancy details
+        dep_questions = QuestionDependance.objects.filter(question=quest)
+        for dep_question in dep_questions:
+            answer_id = dep_question.answer_id
+            dep_q_id = dep_question.id
+
+        # get the parent question from Answers
+        parent_quest = Answer.objects.get(id = answer_id)
+        parent_quest_id = parent_quest.question_id
+
+        # get the parent question's response
+        responses = Response.objects.filter(question_id=parent_quest_id, session_id=session_id)
+        for response in responses:
+            resp_answer_id = response.answer_id
+
+         # get the response's answer value
+        resp_answer = Answer.objects.get(id = resp_answer_id)
+        repeat_count = resp_answer.option        
+
     serializer = QuestionSerializer(quest)
     queryset = Answer.objects.filter(question_id=quest)
     ser = AnswerSerializer(queryset, many=True)
 
-    return Res({"Question": serializer.data, "Ans": ser.data}, status.HTTP_200_OK)
+    return Res({"Question": serializer.data, "Ans": ser.data,"repeat_count" : repeat_count}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -245,14 +274,18 @@ def answer_question(request):
             if obj == foo:
                 if index > 0:
                     previous = questions[index - 1]
+                else:
+                    previous = questions[index]
+
                 if index < (l - 1):
                     next_ = questions[index + 1]
                     return JsonResponse({
                         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                         #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         
-                        'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                        'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+
                         "session_id": serializer.data['session']
                     })
 
@@ -283,25 +316,54 @@ def answer_question(request):
 def check_answer_algo(ser):
     ser.save()
     q = Question.objects.get(id=ser.data['question'])
-    quest = Questionnaire.objects.get(id=q.questionnaire_id)
+    quest = Questionnaire.objects.get(id=q.questionnaire_id)        
+    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+
     question_depends_on = QuestionDependance.objects.filter(
             question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
         ).exclude(
             answer_id__in=Response.objects.filter(session_id=ser.data['session']).values_list('answer_id', flat=True)
         )
-    
+
     if question_depends_on.exists():
         questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
-    else:
-        questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
 
+        # perform the repeatable check
+        # get all answers for the current question
+        ans = Answer.objects.filter(question_id=q.id)
+
+        #check if the answers are in the dependancy table
+        ans_dep = QuestionDependance.objects.filter(answer_id__in=ans.values_list('id', flat=True))
+
+        if ans_dep.exists():
+            # get the questions connected by this dependancy
+            que_dep = Question.objects.filter(id__in=ans_dep.values_list('question_id', flat=True))
+
+            #check if any of these questions are repeatable
+            q_is_repeatable = False
+            for que in que_dep:
+                if que.is_repeatable:
+                    q_is_repeatable = True
+        
+            if q_is_repeatable:
+                questions = Question.objects.filter(questionnaire=quest).order_by("question_order") 
+        else:
+            # check if this question is in the dependancy table and has a response
+             if QuestionDependance.objects.filter(question_id=q.id).exists():
+                if Response.objects.filter(session_id=ser.data['session'],question_id=q.id).exists():
+                    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+
+                
     foo = q
     previous = next_ = None
     l = len(questions)
     for index, obj in enumerate(questions):
         if obj == foo:
             if index > 0:
-                previous = questions[index - 1]
+                previous = questions[index - 1]                   
+            else:
+                previous = questions[index]
+
             if index < (l - 1):
                 next_ = questions[index + 1]
                 serializer = QuestionSerializer(next_)
@@ -310,8 +372,10 @@ def check_answer_algo(ser):
                 return JsonResponse({
                     #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-                    'link': 'https://prod.kenyahmis.org:9000/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://prod.kenyahmis.org:9000/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+
+                    'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                    'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+
                     "session_id": ser.data['session']
                 })
 
@@ -353,3 +417,12 @@ def get_qdependancy_all(request, qn_id):
     dependancy_details= DependancySerializer(dep_answer,many=True)
     
     return Res({"Dependancy":dependancy_details.data}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+def get_question_ans_dep(request):
+    quest = Questionnaire.objects.filter(is_active=True)
+    
+    data = QuestionAnswDepSerializer(quest, many=True)
+    return Res(data.data, status.HTTP_200_OK)
+    

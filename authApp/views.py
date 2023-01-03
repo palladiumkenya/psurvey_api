@@ -1,4 +1,5 @@
 from re import A
+from django.http import HttpResponse
 from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import IsAuthenticated
@@ -13,6 +14,9 @@ from .serializer import *
 from .models import *
 from survey.models import *
 
+# holder to check app health
+def home(request):
+    return HttpResponse(status.HTTP_200_OK)
 
 def informed(request):
     return render(request, 'authApp/informed.html')
