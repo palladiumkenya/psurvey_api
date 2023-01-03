@@ -1,7 +1,7 @@
 name: deploy to test instance
 on:
   push:
-    branches: [cicd]
+    branches: [dev]
 jobs:
 
   build:
@@ -29,6 +29,6 @@ jobs:
           cp  /apps/dockerApps/psurvey_api/docker-compose.yml /apps/github-workflows/mhealth-apps/psurvey_api
           cp -r /apps/dockerApps/psurvey_api/docker/ /apps/github-workflows/mhealth-apps/psurvey_api
           cp /apps/dockerApps/psurvey_api/pSurvey_api/settings.py /apps/github-workflows/mhealth-apps/psurvey_api/pSurvey_api
-          docker-compose down
-          docker-compose rm -f
-          docker-compose up --build -d
+          docker-compose stop pythonpsurvey
+          docker-compose rm pythonpsurvey
+          docker-compose up -d pythonpsurvey
