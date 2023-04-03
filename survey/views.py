@@ -393,11 +393,11 @@ def check_answer_algo(ser):
                 end.save()
 
                 #insert the survey responses into the survey's ETL table
-                populate_etl_table(ser.data['session'])
+                str = populate_etl_table(ser.data['session'])
 
                 return Res({
                     "success": True,
-                    "Message": "Questionnaire complete, Thank You👌!"
+                    "Message": "Questionnaire complete, Thank You👌!" + str
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
@@ -440,6 +440,7 @@ def populate_etl_table(session_id):
         #populate the ETL table
         with connection.cursor() as cursor:
                     cursor.execute("call sp_create_table('"+sql_str+"')")
+        return sql_str
     except Exception as e: 
         print("error", e)
 
