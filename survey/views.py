@@ -401,14 +401,14 @@ def check_answer_algo(ser):
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
-def populate_etl_table(survey_id):
+def populate_etl_table(session_id):
 
     #get the survey's ETL table name
-    etl_table_name = Questionnaire.objects.get(id=survey_id).responses_table_name
+    etl_table_name = Questionnaire.objects.get(id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).responses_table_name
 
     #get all responses for this survey
     responses = Response.objects.filter(
-            question__in=Question.objects.filter(questionnaire_id=survey_id).order_by("question_order"))   
+            question__in=Question.objects.filter(questionnaire_id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).order_by("id"))   
 
     #generate ETL table insert statement
     sql_str = ""
