@@ -393,7 +393,7 @@ def check_answer_algo(ser):
                 end.save()
 
                 #insert the survey responses into the survey's ETL table
-                populate_etl_table(ser.data['session'])
+                #populate_etl_table(ser.data['session'])
 
                 return Res({
                     "success": True,
