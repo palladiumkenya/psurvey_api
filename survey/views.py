@@ -402,45 +402,46 @@ def check_answer_algo(ser):
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
 def populate_etl_table(session_id):
+    try:
+        #get the survey's ETL table name
+        etl_table_name = Questionnaire.objects.get(id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).responses_table_name
 
-    #get the survey's ETL table name
-    etl_table_name = Questionnaire.objects.get(id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).responses_table_name
+        #get all responses for this survey
+        responses = Response.objects.filter(
+                question__in=Question.objects.filter(questionnaire_id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).order_by("id"))   
 
-    #get all responses for this survey
-    responses = Response.objects.filter(
-            question__in=Question.objects.filter(questionnaire_id = Started_Questionnaire.objects.get(id=session_id).questionnaire_id).order_by("id"))   
-
-    #generate ETL table insert statement
-    sql_str = ""
-    columns_str = "INSERT INTO " + etl_table_name + "("
-    values_str = "VALUES("
-    
-    l = len(responses)
-    for index, obj in enumerate(responses):
-
-        #get the question response column name for this response
-        response_col_name = Question.objects.get(id = obj.question_id).response_col_name
-        columns_str +=  response_col_name 
-
-        #get the answer value for this response
-        if obj.open_text != '':
-             values_str += "'" + obj.open_text + "'"
-        else:
-            answer_value = Answer.objects.get(id = obj.answer_id).option
-            values_str +=   "'" + answer_value + "'"
+        #generate ETL table insert statement
+        sql_str = ""
+        columns_str = "INSERT INTO " + etl_table_name + "("
+        values_str = "VALUES("
         
-        if index < (l - 1):
-            columns_str +=','
-            values_str +=','
+        l = len(responses)
+        for index, obj in enumerate(responses):
 
-    columns_str +=') '
-    values_str +=')'   
-    sql_str = columns_str + values_str
-    
-    #populate the ETL table
-    with connection.cursor() as cursor:
-                cursor.execute("call sp_create_table('"+sql_str+"')")
+            #get the question response column name for this response
+            response_col_name = Question.objects.get(id = obj.question_id).response_col_name
+            columns_str +=  response_col_name 
 
+            #get the answer value for this response
+            if obj.open_text != '':
+                values_str += "'" + obj.open_text + "'"
+            else:
+                answer_value = Answer.objects.get(id = obj.answer_id).option
+                values_str +=   "'" + answer_value + "'"
+            
+            if index < (l - 1):
+                columns_str +=','
+                values_str +=','
+
+        columns_str +=') '
+        values_str +=')'   
+        sql_str = columns_str + values_str
+        
+        #populate the ETL table
+        with connection.cursor() as cursor:
+                    cursor.execute("call sp_create_table('"+sql_str+"')")
+    except Exception as e: 
+        return Res({'success': False, 'error': + str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 #fetch all questions
 
