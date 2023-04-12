@@ -10,6 +10,7 @@ from django.core.serializers import serialize
 from django.db import transaction, IntegrityError
 from django.db.models import Count
 from django.db.models.functions import Cast, TruncMonth
+from django.db import connection
 from django.http import HttpResponse, Http404, JsonResponse
 from django.shortcuts import render, redirect
 from docutils.nodes import status
@@ -69,27 +70,25 @@ def active_questionnaire_api(request):
     if request.user.access_level.id == 1:
         quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
 
-        queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True,
-                                            active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, is_published=True,           active_till__gte=date.today())
     elif request.user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                     ).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,
-                                            active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, active_till__gte=date.today())
     elif request.user.access_level.id == 3:
         queryset = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
     elif request.user.access_level.id == 4:
         q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, active_till__gte=date.today())
         
     elif request.user.access_level.id == 5:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                     ).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, active_till__gte=date.today())
     queryset.filter(id__in=question).order_by('-created_at')
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
@@ -136,7 +135,9 @@ def get_consent(request):
         
     return JsonResponse({
         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
-        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
+        #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
+        
+        'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(a_id),
 
 
         'session': session.pk
@@ -283,8 +284,11 @@ def answer_question(request):
                         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                         #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
                         
-                        'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                        #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+
+                        'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                        'prevlink': 'https://psurveyapitest.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
 
                         "session_id": serializer.data['session']
                     })
@@ -373,8 +377,11 @@ def check_answer_algo(ser):
                     #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
                     #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
 
-                    'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                    #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+
+                    'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                    'prevlink': 'https://psurveyapitest.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
 
                     "session_id": ser.data['session']
                 })
@@ -382,13 +389,83 @@ def check_answer_algo(ser):
             elif next_ == None:
                 end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
                 end.save()
+
+                #insert the survey responses into the survey's ETL table
+                populate_etl_table(ser.data['session'])
+
                 return Res({
                     "success": True,
-                    "Message": "Questionnaire complete, Thank You👌!"
+                    "Message": "Questionnaire complete, Thank You👌!" 
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
+def populate_etl_table(session_id):
+    try:
+        #get the survey's ETL table name
+        survey = Started_Questionnaire.objects.get(id=session_id)
+        etl_table_name = Questionnaire.objects.get(id = survey.questionnaire_id).responses_table_name
+        submittor = Users.objects.get(id=survey.started_by_id)
+        submittor_name = submittor.f_name + " " + submittor.l_name
+        faci = Facility.objects.get(id = submittor.facility_id)
+        partner = Partner.objects.get( id = Partner_Facility.objects.get( facility_id = submittor.facility_id).partner_id)
+        
 
+        #get all responses for this survey
+        responses = Response.objects.filter(session_id = session_id).order_by("id")   
+
+        #generate ETL table insert statement
+        sql_str = ""
+        multi_select_responses = {}
+        answer_value = ""
+
+        columns_str = 'INSERT INTO "' + etl_table_name + '"(survey_id,submit_date,submitted_by,partner_name,county,sub_county,mfl_code,facility_name,'
+
+        values_str = "VALUES("+ str(session_id)+",'" + str(survey.created_at) + "','" + submittor_name + "','" + partner.name + "','" + faci.county + "','" + faci.sub_county + "','" + str(faci.mfl_code) + "','" + faci.name + "',"        
+
+        l = len(responses)
+        for index, obj in enumerate(responses):
+
+            #get the question response column name for this response
+            ques = Question.objects.get(id = obj.question_id)
+            response_col_name = ques.response_col_name
+
+            #get the answer value for this response
+            if obj.open_text != '':
+               answer_value = obj.open_text
+            else:
+                answer_value =   Answer.objects.get(id = obj.answer_id).option
+
+            if ques.question_type != 3:
+                columns_str +=  response_col_name 
+                values_str +=  "'" + answer_value + "'"
+
+                if index < (l - 1):
+                    columns_str +=','
+                    values_str +=','
+            else:
+                if  not multi_select_responses.get(response_col_name):
+                    multi_select_responses[response_col_name] =  answer_value
+                else:
+                    multi_select_responses[response_col_name] +=  "," + answer_value
+        #remove last comma from string
+        columns_str = columns_str.rstrip(',')
+        values_str = values_str.rstrip(',')
+
+        for col in multi_select_responses:
+            columns_str += "," + col 
+            values_str += ",'" + multi_select_responses[col] + "'"                    
+
+        columns_str +=') '
+        values_str +=')'   
+        sql_str = columns_str + values_str
+        
+        #populate the ETL table
+        with connection.cursor() as cursor:
+            cursor.execute(sql_str)
+
+        return sql_str
+    except Exception as e: 
+        print("error", e)
 
 #fetch all questions
 
