@@ -14,6 +14,10 @@ from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 from docutils.nodes import term
+from dotenv import load_dotenv
+
+load_dotenv()
+
 
 BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 
@@ -21,7 +25,8 @@ BASE_DIR = Path(__file__).resolve(strict=True).parent.parent
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'b6&xe78vjs@fr3hjek^36e#01nrq*tgipu5q49s9p0n2-f0q5)'
+SECRET_KEY = os.getenv(
+    'SECRET', default='b6&xe78vjs@fr3hjek^36e#01nrq*tgipu5q49s9p0n2-f0q5)')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -62,8 +67,7 @@ ROOT_URLCONF = 'pSurvey_api.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')]
-        ,
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -79,18 +83,18 @@ TEMPLATES = [
 WSGI_APPLICATION = 'pSurvey_api.wsgi.application'
 
 
-
 # Database
 # https://docs.djangoproject.com/en/3.1/ref/settings/#databases
 
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'pSurvey',
-        'USER': 'medyq_user',
-        'PASSWORD': 'j#3ank2UW+r!tj73',
-        'HOST': '197.248.44.230',  # Or an IP Address that your DB is hosted on
-        'PORT': '5472',
+        'NAME': os.getenv('DATABASE_NAME'),
+        'USER': os.getenv('USERNAME'),
+        'PASSWORD': os.getenv('PASSWORD'),
+        # Or an IP Address that your DB is hosted on
+        'HOST': os.getenv('HOST'),
+        'PORT': os.getenv('PORT'),
     }
 }
 
