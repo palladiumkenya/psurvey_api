@@ -1,4 +1,5 @@
 import json
+import os
 import requests
 from datetime import date
 
@@ -137,7 +138,7 @@ def get_consent(request):
         #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
         #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
         
-        'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(a_id),
+        'link': '{}/{}'.format(os.getenv('CONSENT_ANSWER_LINK'),a_id),
 
 
         'session': session.pk
@@ -286,9 +287,9 @@ def answer_question(request):
                         
                         #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
                         #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
-
-                        'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                        'prevlink': 'https://psurveyapitest.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        'link': '{}/{}'.format(os.getenv('NEXT_QUESTION'),next_.id),
+                        
+                        'prevlink': '/{}/{}'.format(os.getenv('PREVIOUS_QUESTION'),previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
 
                         "session_id": serializer.data['session']
                     })
@@ -379,10 +380,9 @@ def check_answer_algo(ser):
 
                     #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
                     #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-
-                    'link': 'https://psurveyapitest.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                    'prevlink': 'https://psurveyapitest.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-
+                    'link': '{}/{}'.format(os.getenv('ALGO_LINK'),next_.id),
+                    'prevlink': '{}/{}/{}'.format(os.getenv('ALGO_NEXT_QUESTION'),previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                
                     "session_id": ser.data['session']
                 })
 
