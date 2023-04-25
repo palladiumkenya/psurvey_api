@@ -296,6 +296,10 @@ def answer_question(request):
                 elif next_ == None:
                     end = End_Questionnaire.objects.create(questionnaire=quest, session_id=serializer.data['session'])
                     end.save()
+
+                    #insert the survey responses into the survey's ETL table
+                    populate_etl_table(serializer.data['session'])
+
                     return Res({
                         "success": True,
                         "Message": "Questionnaire complete, Thank You👌!"
@@ -315,7 +319,6 @@ def answer_question(request):
             return Res(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     return data
-
 
 def check_answer_algo(ser):
     ser.save()
@@ -395,9 +398,10 @@ def check_answer_algo(ser):
 
                 return Res({
                     "success": True,
-                    "Message": "Questionnaire complete, Thank You👌!" 
+                    "Message": "Questionnaire complete, Thank You👌!"    
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
+
 
 def populate_etl_table(session_id):
     try:
