@@ -77,9 +77,9 @@ def active_questionnaire_api(request):
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
                                                     ).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
     elif request.user.access_level.id == 3:
-        queryset = Questionnaire.objects.filter(is_active=True, active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(is_active=True, is_published=True, active_till__gte=date.today())
     elif request.user.access_level.id == 4:
         q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
         queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
