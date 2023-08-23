@@ -61,6 +61,31 @@ def designation(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def current_user_nishauri(request, q_mfl_code, q_ccc_no):
+    if request.method == "GET":
+        queryset = Users.objects.get(id=request.user.id)
+        serializer = MyUserSerializer(queryset)
+        
+        fac = Facility.objects.get(mfl_code=q_mfl_code)
+        quest = Facility_Questionnaire.objects.filter(facility_id__in=Facility.objects.filter(mfl_code=q_mfl_code).values_list('id', flat=True))
+    
+        aq = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today()).exclude(
+                id__in=End_Questionnaire.objects.filter(session_id__in=Started_Questionnaire.objects.filter(ccc_number=q_ccc_no).values_list('id', flat=True)).values_list('questionnaire_id', flat=True)
+            ).count()
+    
+        #aq = Questionnaire.objects.filter(is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today()).order_by('-created_at').count()
+
+        serializer.data.update({"designation": {"id": 6, "name": "Nishauri User"}})
+        serializer.data.update({"facility": {"id": fac.id, "name": fac.name}})
+            
+        cs = End_Questionnaire.objects.filter(session_id__in=Started_Questionnaire.objects.filter(ccc_number=q_ccc_no).values_list('id', flat=True)).count()
+
+        return Res({'user': serializer.data, 'Active_questionnaires': aq, 'Completed_surveys': cs},
+                   status=status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def current_user(request):
     if request.method == "GET":
         queryset = Users.objects.get(id=request.user.id)

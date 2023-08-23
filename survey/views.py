@@ -66,6 +66,21 @@ def all_questionnaire_api(request):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def active_questionnaire_nishauri_api(request, q_mfl_code, q_ccc_no):
+    question = Question.objects.filter().values_list('questionnaire_id', flat=True)
+    quest = Facility_Questionnaire.objects.filter(facility_id__in=Facility.objects.filter(mfl_code=q_mfl_code).values_list('id', flat=True))
+    
+    queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today()).exclude(
+                id__in=End_Questionnaire.objects.filter(session_id__in=Started_Questionnaire.objects.filter(ccc_number=q_ccc_no).values_list('id', flat=True)).values_list('questionnaire_id', flat=True)
+            )     
+
+    queryset.filter(id__in=question).order_by('-created_at')
+    serializer = QuestionnaireSerializer(queryset, many=True)
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def active_questionnaire_api(request):
     question = Question.objects.filter().values_list('questionnaire_id', flat=True)
     if request.user.access_level.id == 1:

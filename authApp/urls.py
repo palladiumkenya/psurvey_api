@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/facility/single/', views.facility_single),
     path('api/designation/', views.designation),
     path('api/current/user/', views.current_user),
+    path('api/current/user/<int:q_mfl_code>/<str:q_ccc_no>/', views.current_user_nishauri),
     path('api/counties/', views.counties),
 ]
 
