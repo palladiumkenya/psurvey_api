@@ -78,6 +78,14 @@ def active_questionnaire_nishauri_api(request, q_mfl_code, q_ccc_no):
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def questionnaire_data(request,q_id,q_mfl_code):
+    query_set = None
+    q = Questionnaire.objects.get(id=q_id)
+    query_set = Questionnaire_Data.objects.filter(questionnaire=q,mfl_code=q_mfl_code)
+    serializer = QuestionnaireDataSerializer(query_set, many=True)
+    return Res({"data": serializer.data}, status.HTTP_200_OK)
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])

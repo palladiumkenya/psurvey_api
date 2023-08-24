@@ -74,6 +74,15 @@ class Started_Questionnaire (models.Model):
     class Meta:
         db_table = "Started_Questionnaire"
 
+class Questionnaire_Data (models.Model):
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    ccc_number = models.CharField(max_length=15, null=True)
+    mfl_code = models.PositiveIntegerField()
+    has_completed_survey = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "Questionnaire_data"
+
 
 class Response (models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE)

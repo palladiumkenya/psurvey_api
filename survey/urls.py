@@ -10,6 +10,7 @@ urlpatterns = [
     path('api/questionnaire/all/', views.all_questionnaire_api, name='questionnaire_api'),
     path('api/questionnaire/active/', views.active_questionnaire_api, name='active_questionnaire_api'),
     path('api/questionnaire/active/<int:q_mfl_code>/<str:q_ccc_no>/', views.active_questionnaire_nishauri_api, name='active_questionnaire_nishauri_api'),
+    path('api/questionnaire/data/<int:q_id>/<int:q_mfl_code>/', views.questionnaire_data, name='questionnaire_data'),
     path('api/questions/all/', views.all_question_api, name='all_question_api'),
     path('api/questions/list/', views.list_question_api, name='list_question_api'),
     path('api/questionnaire/start/', views.get_consent, name='provide_consent_api'),

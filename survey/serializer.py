@@ -13,6 +13,11 @@ class QuestionnaireParticipantsSerializer(serializers.ModelSerializer):
         model = Questionnaire_Participants
         fields = '__all__'
 
+class QuestionnaireDataSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Questionnaire_Data
+        fields = '__all__'
+
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Question
