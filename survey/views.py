@@ -35,32 +35,35 @@ def questionnaire_participants(request):
         serializer = QuestionnaireParticipantsSerializer(queryset, many=True)
         return Res(data={"data": serializer.data}, status=status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def all_questionnaire_api(request):
     if request.user.access_level.id == 1:
-            q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
-            quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
+        q = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+        quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
     elif request.user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                    ).values_list('questionnaire_id').distinct()
+                                                  ).values_list('questionnaire_id').distinct()
         quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
     elif request.user.access_level.id == 3:
         quest = Questionnaire.objects.filter().order_by('-created_at')
     elif request.user.access_level.id == 4:
-            q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
-            quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
+        q = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+        quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
     elif request.user.access_level.id == 5:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                    ).values_list('questionnaire_id').distinct()
+                                                  ).values_list('questionnaire_id').distinct()
         quest = Questionnaire.objects.filter(id__in=q).order_by('-created_at')
-        
+
     serializer = QuestionnaireSerializer(quest, many=True)
-    
+
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
 
@@ -68,54 +71,67 @@ def all_questionnaire_api(request):
 @permission_classes([IsAuthenticated])
 def active_questionnaire_nishauri_api(request, q_mfl_code, q_ccc_no):
     question = Question.objects.filter().values_list('questionnaire_id', flat=True)
-    quest = Facility_Questionnaire.objects.filter(facility_id__in=Facility.objects.filter(mfl_code=q_mfl_code).values_list('id', flat=True))
-    
+    quest = Facility_Questionnaire.objects.filter(facility_id__in=Facility.objects.filter(
+        mfl_code=q_mfl_code).values_list('id', flat=True))
+
     queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today()).exclude(
-                id__in=End_Questionnaire.objects.filter(session_id__in=Started_Questionnaire.objects.filter(ccc_number=q_ccc_no).values_list('id', flat=True)).values_list('questionnaire_id', flat=True)
-            )     
+        id__in=End_Questionnaire.objects.filter(session_id__in=Started_Questionnaire.objects.filter(
+            ccc_number=q_ccc_no).values_list('id', flat=True)).values_list('questionnaire_id', flat=True)
+    )
 
     queryset.filter(id__in=question).order_by('-created_at')
     serializer = QuestionnaireSerializer(queryset, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
 
+
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
-def questionnaire_data(request,q_id,q_mfl_code):
+def questionnaire_data(request, q_id, q_mfl_code):
     query_set = None
     q = Questionnaire.objects.get(id=q_id)
-    query_set = Questionnaire_Data.objects.filter(questionnaire=q,mfl_code=q_mfl_code)
+    query_set = Questionnaire_Data.objects.filter(
+        questionnaire=q, mfl_code=q_mfl_code)
     serializer = QuestionnaireDataSerializer(query_set, many=True)
     return Res({"data": serializer.data}, status.HTTP_200_OK)
+
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def active_questionnaire_api(request):
     question = Question.objects.filter().values_list('questionnaire_id', flat=True)
     if request.user.access_level.id == 1:
-        quest = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id)
+        quest = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id)
 
-        queryset = Questionnaire.objects.filter(id__in=quest.values_list('questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(id__in=quest.values_list(
+            'questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
     elif request.user.access_level.id == 2:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                    ).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
+                                                  ).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
     elif request.user.access_level.id == 3:
-        queryset = Questionnaire.objects.filter(is_active=True, is_published=True, active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(
+            is_active=True, is_published=True, active_till__gte=date.today())
     elif request.user.access_level.id == 4:
-        q = Facility_Questionnaire.objects.filter(facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
-        
+        q = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
+
     elif request.user.access_level.id == 5:
         fac = Partner_Facility.objects.filter(
             partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
         q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
-                                                    ).values_list('questionnaire_id').distinct()
-        queryset = Questionnaire.objects.filter(id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
-    
+                                                  ).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
+
     elif request.user.access_level.id == 6:
-        queryset = Questionnaire.objects.filter(is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today())
+        queryset = Questionnaire.objects.filter(
+            is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today())
 
     queryset.filter(id__in=question).order_by('-created_at')
     serializer = QuestionnaireSerializer(queryset, many=True)
@@ -125,7 +141,8 @@ def active_questionnaire_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def all_question_api(request):
-    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id']).order_by('question_order')
+    quest = Question.objects.filter(
+        questionnaire_id=request.data['questionnaire_id']).order_by('question_order')
     serializer = QuestionSerializer(quest, many=True)
 
     return Res({"data": serializer.data}, status.HTTP_200_OK)
@@ -143,10 +160,11 @@ def list_question_api(request):
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def get_consent(request):
-    quest = Question.objects.filter(questionnaire_id=request.data['questionnaire_id']).order_by('question_order')[:1]
+    quest = Question.objects.filter(
+        questionnaire_id=request.data['questionnaire_id']).order_by('question_order')[:1]
     a_id = 0
     for q in quest:
-        a_id =q.id
+        a_id = q.id
     consent = Patient_Consent.objects.create(
         questionnaire_id=request.data['questionnaire_id'],
         informed_consent=request.data['informed_consent'],
@@ -155,17 +173,18 @@ def get_consent(request):
         ccc_number=request.data['ccc_number'])
     consent.save()
     session = Started_Questionnaire.objects.create(questionnaire_id=request.data['questionnaire_id'],
-                                                    questionnaire_participant_id=request.data['questionnaire_participant_id'],
-                                                started_by=request.user,
-                                                ccc_number=request.data['ccc_number'],
-                                                firstname=request.data['first_name'])
+                                                   questionnaire_participant_id=request.data[
+                                                       'questionnaire_participant_id'],
+                                                   started_by=request.user,
+                                                   ccc_number=request.data['ccc_number'],
+                                                   firstname=request.data['first_name'])
     session.save()
-        
+
     return JsonResponse({
-        #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
-        #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
-        
-        'link': '{}/{}'.format(os.getenv('CONSENT_ANSWER_LINK'),a_id),
+        # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(a_id),
+        # 'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(a_id),
+
+        'link': '{}/{}'.format(os.getenv('CONSENT_ANSWER_LINK'), a_id),
 
 
         'session': session.pk
@@ -185,7 +204,6 @@ def initial_consent(request):
     if check['f_name'].upper() != request.data['first_name'].upper():
         return Res({'error': False, 'message': 'client verification failed'}, status.HTTP_200_OK)
     return Res({'success': True, 'message': "You can now start questionnaire"}, status.HTTP_200_OK)
-
 
 
 def check_ccc(value):
@@ -224,23 +242,24 @@ def start_questionnaire_new(request, q_id, session_id):
             dep_q_id = dep_question.id
 
         # get the parent question from Answers
-        parent_quest = Answer.objects.get(id = answer_id)
+        parent_quest = Answer.objects.get(id=answer_id)
         parent_quest_id = parent_quest.question_id
 
         # get the parent question's response
-        responses = Response.objects.filter(question_id=parent_quest_id, session_id=session_id)
+        responses = Response.objects.filter(
+            question_id=parent_quest_id, session_id=session_id)
         for response in responses:
             resp_answer_id = response.answer_id
 
          # get the response's answer value
-        resp_answer = Answer.objects.get(id = resp_answer_id)
-        repeat_count = resp_answer.option        
+        resp_answer = Answer.objects.get(id=resp_answer_id)
+        repeat_count = resp_answer.option
 
     serializer = QuestionSerializer(quest)
     queryset = Answer.objects.filter(question_id=quest)
     ser = AnswerSerializer(queryset, many=True)
 
-    return Res({"Question": serializer.data, "Ans": ser.data,"repeat_count" : repeat_count}, status.HTTP_200_OK)
+    return Res({"Question": serializer.data, "Ans": ser.data, "repeat_count": repeat_count}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
@@ -263,15 +282,17 @@ def previous_question(request, q_id, session_id):
 @permission_classes([IsAuthenticated])
 def answer_question(request):
     q = Question.objects.get(id=request.data['question'])
-    is_responded = Response.objects.filter(question_id=request.data['question'], session_id=request.data['session'])
-    
+    is_responded = Response.objects.filter(
+        question_id=request.data['question'], session_id=request.data['session'])
+
     if is_responded.exists:
         is_responded.delete()
-        
+
     if q.question_type == 3:
         a = request.data.copy()
         trans_one = transaction.savepoint()
-        b = a['answer'].replace(" ", '').replace('[', '').replace(']', '').split(',')
+        b = a['answer'].replace(" ", '').replace(
+            '[', '').replace(']', '').split(',')
 
         for i in b:
             a.update({'answer': i})
@@ -283,18 +304,21 @@ def answer_question(request):
                 return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
         q = Question.objects.get(id=serializer.data['question'])
-        quest = Questionnaire.objects.get(id=q.questionnaire_id)    
+        quest = Questionnaire.objects.get(id=q.questionnaire_id)
         question_depends_on = QuestionDependance.objects.filter(
-                question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
-            ).exclude(
-                answer_id__in=Response.objects.filter(session_id=serializer.data['session']).values_list('answer_id', flat=True)
-            )
-    
-    
+            question__in=Question.objects.filter(
+                questionnaire=quest).order_by("question_order")
+        ).exclude(
+            answer_id__in=Response.objects.filter(
+                session_id=serializer.data['session']).values_list('answer_id', flat=True)
+        )
+
         if question_depends_on.exists():
-            questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
+            questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(
+                id__in=question_depends_on.values_list('question_id', flat=True))
         else:
-            questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+            questions = Question.objects.filter(
+                questionnaire=quest).order_by("question_order")
 
         foo = q
         previous = next_ = None
@@ -309,24 +333,26 @@ def answer_question(request):
                 if index < (l - 1):
                     next_ = questions[index + 1]
                     return JsonResponse({
-                        #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                        #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
-                        
-                        #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                        #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
-                        'link': '{}/{}'.format(os.getenv('NEXT_QUESTION'),next_.id),
-                        
-                        'prevlink': '/{}/{}'.format(os.getenv('PREVIOUS_QUESTION'),previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                        # 'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+
+                        # 'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                        # 'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, serializer.data['session']) if previous else None, # TODO:: Add previous link
+                        'link': '{}/{}'.format(os.getenv('NEXT_QUESTION'), next_.id),
+
+                        # TODO:: Add previous link
+                        'prevlink': '/{}/{}'.format(os.getenv('PREVIOUS_QUESTION'), previous.id, serializer.data['session']) if previous else None,
 
                         "session_id": serializer.data['session']
                     })
 
                 elif next_ == None:
-                    end = End_Questionnaire.objects.create(questionnaire=quest, session_id=serializer.data['session'])
+                    end = End_Questionnaire.objects.create(
+                        questionnaire=quest, session_id=serializer.data['session'])
                     end.save()
 
-                    #insert the survey responses into the survey's ETL table
-                    populate_etl_table(serializer.data['session'])
+                    # insert the survey responses into the survey's ETL table
+                    # populate_etl_table(serializer.data['session'])
 
                     return Res({
                         "success": True,
@@ -348,54 +374,62 @@ def answer_question(request):
 
     return data
 
+
 def check_answer_algo(ser):
     ser.save()
     q = Question.objects.get(id=ser.data['question'])
-    quest = Questionnaire.objects.get(id=q.questionnaire_id)        
-    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+    quest = Questionnaire.objects.get(id=q.questionnaire_id)
+    questions = Question.objects.filter(
+        questionnaire=quest).order_by("question_order")
 
     question_depends_on = QuestionDependance.objects.filter(
-            question__in=Question.objects.filter(questionnaire=quest).order_by("question_order")
-        ).exclude(
-            answer_id__in=Response.objects.filter(session_id=ser.data['session']).values_list('answer_id', flat=True)
-        )
+        question__in=Question.objects.filter(
+            questionnaire=quest).order_by("question_order")
+    ).exclude(
+        answer_id__in=Response.objects.filter(
+            session_id=ser.data['session']).values_list('answer_id', flat=True)
+    )
 
     if question_depends_on.exists():
-        questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(id__in=question_depends_on.values_list('question_id', flat=True))
+        questions = Question.objects.filter(questionnaire=quest).order_by("question_order").exclude(
+            id__in=question_depends_on.values_list('question_id', flat=True))
 
         # perform the repeatable check
         # get all answers for the current question
         ans = Answer.objects.filter(question_id=q.id)
 
-        #check if the answers are in the dependancy table
-        ans_dep = QuestionDependance.objects.filter(answer_id__in=ans.values_list('id', flat=True))
+        # check if the answers are in the dependancy table
+        ans_dep = QuestionDependance.objects.filter(
+            answer_id__in=ans.values_list('id', flat=True))
 
         if ans_dep.exists():
             # get the questions connected by this dependancy
-            que_dep = Question.objects.filter(id__in=ans_dep.values_list('question_id', flat=True))
+            que_dep = Question.objects.filter(
+                id__in=ans_dep.values_list('question_id', flat=True))
 
-            #check if any of these questions are repeatable
+            # check if any of these questions are repeatable
             q_is_repeatable = False
             for que in que_dep:
                 if que.is_repeatable:
                     q_is_repeatable = True
-        
+
             if q_is_repeatable:
-                questions = Question.objects.filter(questionnaire=quest).order_by("question_order") 
+                questions = Question.objects.filter(
+                    questionnaire=quest).order_by("question_order")
         else:
             # check if this question is in the dependancy table and has a response
-             if QuestionDependance.objects.filter(question_id=q.id).exists():
-                if Response.objects.filter(session_id=ser.data['session'],question_id=q.id).exists():
-                    questions = Question.objects.filter(questionnaire=quest).order_by("question_order")
+            if QuestionDependance.objects.filter(question_id=q.id).exists():
+                if Response.objects.filter(session_id=ser.data['session'], question_id=q.id).exists():
+                    questions = Question.objects.filter(
+                        questionnaire=quest).order_by("question_order")
 
-                
     foo = q
     previous = next_ = None
     l = len(questions)
     for index, obj in enumerate(questions):
         if obj == foo:
             if index > 0:
-                previous = questions[index - 1]                   
+                previous = questions[index - 1]
             else:
                 previous = questions[index]
 
@@ -405,132 +439,65 @@ def check_answer_algo(ser):
                 queryset = Answer.objects.filter(question=next_)
                 ans_ser = AnswerSerializer(queryset, many=True)
                 return JsonResponse({
-                    #'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
-                    #'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    # 'link': 'https://psurvey-api.mhealthkenya.co.ke/api/questions/answer/{}'.format(next_.id),
+                    # 'prevlink': 'https://psurvey-api.mhealthkenya.co.ke/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
 
-                    #'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
-                    #'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-                    'link': '{}/{}'.format(os.getenv('ALGO_LINK'),next_.id),
-                    'prevlink': '{}/{}/{}'.format(os.getenv('ALGO_NEXT_QUESTION'),previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
-                
+                    # 'link': 'https://psurveyapi.kenyahmis.org/api/questions/answer/{}'.format(next_.id),
+                    # 'prevlink': 'https://psurveyapi.kenyahmis.org/api/previous_question/answer/{}/{}'.format(previous.id, ser.data['session']) if previous else None, # TODO:: Add previous link
+                    'link': '{}/{}'.format(os.getenv('ALGO_LINK'), next_.id),
+                    # TODO:: Add previous link
+                    'prevlink': '{}/{}/{}'.format(os.getenv('ALGO_NEXT_QUESTION'), previous.id, ser.data['session']) if previous else None,
+
                     "session_id": ser.data['session']
                 })
 
             elif next_ == None:
-                end = End_Questionnaire.objects.create(questionnaire=quest, session_id=ser.data['session'])
+                end = End_Questionnaire.objects.create(
+                    questionnaire=quest, session_id=ser.data['session'])
                 end.save()
 
-                #insert the survey responses into the survey's ETL table
-                populate_etl_table(ser.data['session'])
+                # insert the survey responses into the survey's ETL table
+                # populate_etl_table(ser.data['session'])
 
                 return Res({
                     "success": True,
-                    "Message": "Questionnaire complete, Thank You👌!"    
+                    "Message": "Questionnaire complete, Thank You👌!"
                 }, status.HTTP_200_OK)
     return Res({'success': False, 'error': 'Unknown error, try again'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-def populate_etl_table(session_id):
-    try:
-        #get the survey's ETL table name
-        survey = Started_Questionnaire.objects.get(id=session_id)
-        etl_table_name = Questionnaire.objects.get(id = survey.questionnaire_id).responses_table_name
-        submittor = Users.objects.get(id=survey.started_by_id)
-        submittor_name = submittor.f_name + " " + submittor.l_name
-        faci = Facility.objects.get(id = submittor.facility_id)
-        partner = Partner.objects.get( id = Partner_Facility.objects.get( facility_id = submittor.facility_id).partner_id)
-        
+# fetch all questions
 
-        #get all responses for this survey
-        responses = Response.objects.filter(session_id = session_id).order_by("id")   
-
-        #generate ETL table insert statement
-        sql_str = ""
-        multi_select_responses = {}
-        answer_value = ""
-
-        columns_str = 'INSERT INTO "' + etl_table_name + '"(survey_id,submit_date,submitted_by,partner_name,county,sub_county,mfl_code,facility_name,'
-
-        values_str = "VALUES("+ str(session_id)+",'" + str(survey.created_at) + "','" + submittor_name + "','" + partner.name + "','" + faci.county + "','" + faci.sub_county + "','" + str(faci.mfl_code) + "','" + faci.name + "',"        
-
-        l = len(responses)
-        for index, obj in enumerate(responses):
-
-            #get the question response column name for this response
-            ques = Question.objects.get(id = obj.question_id)
-            response_col_name = ques.response_col_name
-
-            #get the answer value for this response
-            if obj.open_text != '':
-               answer_value = obj.open_text
-            else:
-                answer_value =   Answer.objects.get(id = obj.answer_id).option
-
-            if ques.question_type != 3:
-                columns_str +=  response_col_name 
-                values_str +=  "'" + answer_value + "'"
-
-                if index < (l - 1):
-                    columns_str +=','
-                    values_str +=','
-            else:
-                if  not multi_select_responses.get(response_col_name):
-                    multi_select_responses[response_col_name] =  answer_value
-                else:
-                    multi_select_responses[response_col_name] +=  "," + answer_value
-        #remove last comma from string
-        columns_str = columns_str.rstrip(',')
-        values_str = values_str.rstrip(',')
-
-        for col in multi_select_responses:
-            columns_str += "," + col 
-            values_str += ",'" + multi_select_responses[col] + "'"                    
-
-        columns_str +=') '
-        values_str +=')'   
-        sql_str = columns_str + values_str
-        
-        #populate the ETL table
-        with connection.cursor() as cursor:
-            cursor.execute(sql_str)
-
-        return sql_str
-    except Exception as e: 
-        print("error", e)
-
-#fetch all questions
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_questionnaire_all(request, q_id):
     quest = Question.objects.filter(questionnaire=q_id)
-    q_details = QuestionSetSerializer(quest,many=True)
-    return Res({"Questions":q_details.data}, status.HTTP_200_OK)
-
+    q_details = QuestionSetSerializer(quest, many=True)
+    return Res({"Questions": q_details.data}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_answers_all(request, qn_id):
     qn_answer = Answer.objects.filter(question_id=qn_id)
-    answers_details = AnswerAllSerializer(qn_answer,many=True)
-    
-    return Res({"Answers":answers_details.data}, status.HTTP_200_OK)
+    answers_details = AnswerAllSerializer(qn_answer, many=True)
+
+    return Res({"Answers": answers_details.data}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
 def get_qdependancy_all(request, qn_id):
     dep_answer = QuestionDependance.objects.filter(question_id=qn_id)
-    dependancy_details= DependancySerializer(dep_answer,many=True)
-    
-    return Res({"Dependancy":dependancy_details.data}, status.HTTP_200_OK)
+    dependancy_details = DependancySerializer(dep_answer, many=True)
+
+    return Res({"Dependancy": dependancy_details.data}, status.HTTP_200_OK)
 
 
 @api_view(['GET'])
 def get_question_ans_dep(request):
     quest = Questionnaire.objects.filter(is_active=True)
-    
+
     data = QuestionAnswDepSerializer(quest, many=True)
     return Res(data.data, status.HTTP_200_OK)
-    
