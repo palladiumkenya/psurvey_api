@@ -280,6 +280,67 @@ def previous_question(request, q_id, session_id):
 
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
+def answer_all_questions(request):
+    questionnaire_id = request.data['questionnaire_id']
+    responses = request.data['responses']
+
+    for response in responses:
+        consent = Patient_Consent.objects.create(
+            questionnaire_id=questionnaire_id,
+            informed_consent=response['informed_consent'],
+            privacy_policy=response['privacy_policy'],
+            interviewer_statement=response['interviewer_statement'],
+            ccc_number=response['ccc_number'])
+        consent.save()
+        session = Started_Questionnaire.objects.create(questionnaire_id=questionnaire_id,
+                                                       questionnaire_participant_id=response[
+                                                           'questionnaire_participant_id'],
+                                                       started_by=request.user,
+                                                       ccc_number=response['ccc_number'],
+                                                       firstname=response['first_name'])
+        session.save()
+
+        for question_answer in response['question_answers']:
+            question_answer['session'] = session.id
+
+            q = Question.objects.get(id=question_answer['question'])
+            is_responded = Response.objects.filter(
+                question_id=question_answer['question'], session_id=session.id)
+
+            if is_responded.exists:
+                is_responded.delete()
+
+            # return HttpResponse(json.dumps(q.question_type))
+
+            if q.question_type == 3:
+                a = question_answer.copy()
+                trans_one = transaction.savepoint()
+                b = a['answer'].replace(" ", '').replace(
+                    '[', '').replace(']', '').split(',')
+
+                for i in b:
+                    a.update({'answer': i})
+                    serializer = ResponseSerializer(data=a)
+
+                    if serializer.is_valid(raise_exception=True):
+                        serializer.save()
+                    else:
+                        transaction.savepoint_rollback(trans_one)
+
+            else:
+                serializer = ResponseSerializer(data=question_answer)
+
+                if serializer.is_valid():
+                    serializer.save()
+
+    return Res({
+        "success": True,
+        "Message": "Questionnaire submitted successfully. Thank You👌!"
+    }, status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
 def answer_question(request):
     q = Question.objects.get(id=request.data['question'])
     is_responded = Response.objects.filter(
