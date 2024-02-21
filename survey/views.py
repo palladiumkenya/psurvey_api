@@ -558,7 +558,50 @@ def get_qdependancy_all(request, qn_id):
 
 @api_view(['GET'])
 def get_question_ans_dep(request):
-    quest = Questionnaire.objects.filter(is_active=True)
+    if request.user.access_level.id == 1:
+        quest = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id)
+        mfl_code = Facility.objects.get(id=request.user.facility.id).mfl_code
 
-    data = QuestionAnswDepSerializer(quest, many=True)
+        queryset = Questionnaire.objects.filter(id__in=quest.values_list(
+            'questionnaire_id', flat=True), is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
+
+    elif request.user.access_level.id == 2:
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        # fac_target = FacilitySerializer(Facility.objects.filter(            id__in=fac.values_list('facility_id', flat=True)), many=True)
+        # data = list(fac_target.values())
+        # return JsonResponse(data, safe=False)
+
+        q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                  ).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True, is_published=True, target_app='Facility', active_till__gte=date.today())
+    elif request.user.access_level.id == 3:
+        queryset = Questionnaire.objects.filter(
+            is_active=True, is_published=True, active_till__gte=date.today())
+    elif request.user.access_level.id == 4:
+        q = Facility_Questionnaire.objects.filter(
+            facility_id=request.user.facility.id).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
+
+    elif request.user.access_level.id == 5:
+        fac = Partner_Facility.objects.filter(
+            partner__in=Partner_User.objects.filter(user=request.user).values_list('name', flat=True))
+        q = Facility_Questionnaire.objects.filter(facility_id__in=fac.values_list('facility_id', flat=True)
+                                                  ).values_list('questionnaire_id').distinct()
+        queryset = Questionnaire.objects.filter(
+            id__in=q, is_active=True,  is_published=True, target_app='Facility', active_till__gte=date.today())
+
+    elif request.user.access_level.id == 6:
+        queryset = Questionnaire.objects.filter(
+            is_active=True, is_published=True, target_app='Patient', active_till__gte=date.today())
+
+    if request.user.access_level.id == 1:
+        data = QuestionAnswDepDataSerializer(queryset, many=True,
+                                             context={'mfl_code': mfl_code})
+    else:
+        data = QuestionAnswDepSerializer(queryset, many=True)
+
     return Res(data.data, status.HTTP_200_OK)
