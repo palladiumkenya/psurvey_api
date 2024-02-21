@@ -148,8 +148,8 @@ class QuestionAnswDepSerializer(serializers.ModelSerializer):
 
 
 class QuestionAnswDepDataSerializer(serializers.ModelSerializer):
-    questionnaire_data = serializers.SerializerMethodField()
     questions = serializers.SerializerMethodField()
+    questionnaire_data = serializers.SerializerMethodField()
 
     def get_questions(self, instance):
         return QuestionsSerializer(instance.question_set.all().order_by('question_order'), many=True).data

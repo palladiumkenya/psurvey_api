@@ -557,6 +557,7 @@ def get_qdependancy_all(request, qn_id):
 
 
 @api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def get_question_ans_dep(request):
     if request.user.access_level.id == 1:
         quest = Facility_Questionnaire.objects.filter(
