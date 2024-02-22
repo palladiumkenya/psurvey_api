@@ -6,7 +6,7 @@ from . import views
 from django.urls import path
 
 urlpatterns = [
-    path('', views.home,name='home'),
+    path('', views.home, name='home'),
     path('api/informed', views.informed, name='informed'),
     path('api/privacy', views.privacy, name='privacy'),
     # api
@@ -14,8 +14,10 @@ urlpatterns = [
     path('api/facility/single/', views.facility_single),
     path('api/designation/', views.designation),
     path('api/current/user/', views.current_user),
-    path('api/current/user/<int:q_mfl_code>/<str:q_ccc_no>/', views.current_user_nishauri),
+    path('api/current/user/<int:q_mfl_code>/<str:q_ccc_no>/',
+         views.current_user_nishauri),
     path('api/counties/', views.counties),
+    path('api/forgot-password/', views.forgot_password, name='forgot-password'),
 ]
 
 urlpatterns += staticfiles_urlpatterns()
