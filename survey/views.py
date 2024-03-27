@@ -211,7 +211,7 @@ def check_ccc(value):
         "ccc_number": value
     }
 
-    url = "http://ushaurinode.mhealthkenya.org/api/mlab/get/one/client"
+    url = "https://ushauriapi.kenyahmis.org/api/mlab/get/one/client"
     headers = {
         'content-type': "application/json",
         'Accept': 'application/json'
