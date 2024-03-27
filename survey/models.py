@@ -15,6 +15,7 @@ class Questionnaire (models.Model):
     target_app = models.CharField(max_length=45)
     responses_table_name = models.CharField(max_length=255)
     is_published = models.BooleanField(default=False)
+    has_uploaded_data = models.BooleanField(default=False)
 
     class Meta:
         db_table = "Questionnaires"
@@ -72,6 +73,15 @@ class Started_Questionnaire (models.Model):
 
     class Meta:
         db_table = "Started_Questionnaire"
+
+class Questionnaire_Data (models.Model):
+    questionnaire = models.ForeignKey(Questionnaire, on_delete=models.CASCADE)
+    ccc_number = models.CharField(max_length=15, null=True)
+    mfl_code = models.PositiveIntegerField()
+    has_completed_survey = models.BooleanField(default=False)
+
+    class Meta:
+        db_table = "Questionnaire_data"
 
 
 class Response (models.Model):
