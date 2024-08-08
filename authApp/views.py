@@ -1,3 +1,5 @@
+import pyotp
+
 from re import A
 from django.http import HttpResponse
 from django.db import transaction
@@ -65,6 +67,64 @@ def designation(request):
 
 
 @api_view(['POST'])
+def send_otp(request):
+    if request.method == 'POST':
+        email = request.data['email']
+        msisdn = request.data['msisdn']
+
+        user_rec = Users.objects.filter(email=email, msisdn=msisdn)
+        if user_rec.exists():
+            trans_one = transaction.savepoint()
+            user = user_rec[0]
+            try:
+                # generate and save the otp
+                base32secret3232 = pyotp.random_base32()
+                otp = pyotp.TOTP(base32secret3232, interval=600, digits=5)
+                time_otp = otp.now()
+                user.otp = time_otp
+                user.otp_secret = base32secret3232
+                user.save()
+
+                return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
+
+            except IntegrityError:
+                transaction.savepoint_rollback(trans_one)
+                return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception:
+                transaction.savepoint_rollback(trans_one)
+                return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Res({'success': False, 'message': 'invalid user email or phone number'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
+def verify_otp(request):
+    if request.method == 'POST':
+        email = request.data['email']
+        msisdn = request.data['msisdn']
+        otp = request.data['otp']
+
+        user_rec = Users.objects.filter(email=email, msisdn=msisdn)
+        if user_rec.exists():
+            trans_one = transaction.savepoint()
+            user = user_rec[0]
+            try:
+                # verify the otp
+                if pyotp.TOTP(user.otp_secret, interval=600, digits=5).verify(otp):
+                    user.otp_is_verified = True
+                    user.save()
+                    return Res({"success": True, "message": "OTP successully verified"}, status.HTTP_200_OK)
+                else:
+                    return Res({'success': False, 'message': 'OTP expired or Invalid OTP'}, status.HTTP_400_BAD_REQUEST)
+
+            except Exception as err:
+                transaction.savepoint_rollback(trans_one)
+                return Res({'success': False, 'message': str(err)}, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            return Res({'success': False, 'message': 'invalid user email or phone number'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['POST'])
 def forgot_password(request):
     if request.method == 'POST':
         email = request.data['email']
@@ -84,6 +144,9 @@ def forgot_password(request):
 
                 # upate the user record with the new password
                 user.password = new_user.password
+                user.otp = None
+                user.otp_secret = None
+                user.otp_is_verified = False
                 user.save()
 
                 # delete the new user record
@@ -100,7 +163,7 @@ def forgot_password(request):
                 transaction.savepoint_rollback(trans_one)
                 return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
         else:
-            return Res({'success': False, 'message': 'invalid details'}, status=status.HTTP_400_BAD_REQUEST)
+            return Res({'success': False, 'message': 'invalid user email or phone number'}, status=status.HTTP_400_BAD_REQUEST)
 
 
 @api_view(['GET'])

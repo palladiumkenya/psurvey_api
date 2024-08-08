@@ -17,6 +17,8 @@ urlpatterns = [
     path('api/current/user/<int:q_mfl_code>/<str:q_ccc_no>/',
          views.current_user_nishauri),
     path('api/counties/', views.counties),
+    path('api/send-otp/', views.send_otp, name='send-otp'),
+    path('api/verify-otp/', views.verify_otp, name='verify-otp'),
     path('api/forgot-password/', views.forgot_password, name='forgot-password'),
 ]
 
