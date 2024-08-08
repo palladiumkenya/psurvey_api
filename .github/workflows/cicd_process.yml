@@ -31,4 +31,4 @@ jobs:
           cp /apps/dockerApps/psurvey_api/.env /apps/github-workflows/mhealth-apps/psurvey_api/
           docker-compose stop pythonpsurvey
           docker-compose rm -f pythonpsurvey
-          docker-compose up -d pythonpsurvey
+          docker-compose up -d --build pythonpsurvey
