@@ -108,9 +108,9 @@ def send_otp(request):
 
                 return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
 
-            except Exception:
+            except Exception as err:
                 transaction.savepoint_rollback(trans_one)
-                return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
+                return Res({'success': False, 'message': str(err)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Res({'success': False, 'message': 'invalid user email or phone number'}, status=status.HTTP_400_BAD_REQUEST)
 
