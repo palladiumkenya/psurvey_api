@@ -1,4 +1,5 @@
 import pyotp
+import requests
 
 from re import A
 from django.http import HttpResponse
@@ -85,11 +86,27 @@ def send_otp(request):
                 user.otp_secret = base32secret3232
                 user.save()
 
+                # send the OTP via SMS
+                url = "https://sms-service.kenyahmis.org/api/sender"
+                api_key = "2aYBQWzHwvp6l0JsCHgxVt8s91A"
+                destination = ('254' + msisdn[1:]
+                               ) if len(msisdn) == 10 else msisdn
+
+                headers = {"api-token": api_key}
+                data = {
+                    'destination': destination,
+                    'msg': 'Your pSurvey OTP is ' + time_otp,
+                    'sender_id': '40149',
+                    'gateway': '40149'
+                }
+
+                response = requests.post(url, headers=headers, data=data)
+
+                if response.status_code != 200:
+                    return Res({"success": False, "message": "Error occured when sending the OTP", "Error response": response.json()}, status.HTTP_400_BAD_REQUEST)
+
                 return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
 
-            except IntegrityError:
-                transaction.savepoint_rollback(trans_one)
-                return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
             except Exception:
                 transaction.savepoint_rollback(trans_one)
                 return Res({'success': False, 'message': 'error'}, status=status.HTTP_400_BAD_REQUEST)
