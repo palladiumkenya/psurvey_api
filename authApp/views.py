@@ -1,5 +1,6 @@
 import pyotp
 import requests
+import os
 
 from re import A
 from django.http import HttpResponse
@@ -87,8 +88,8 @@ def send_otp(request):
                 user.save()
 
                 # send the OTP via SMS
-                url = "https://sms-service.kenyahmis.org/api/sender"
-                api_key = "2aYBQWzHwvp6l0JsCHgxVt8s91A"
+                url = os.getenv('SMS_SERVICE_HOST')
+                api_key = os.getenv('SMS_SERVICE_KEY')
                 destination = ('254' + msisdn[1:]
                                ) if len(msisdn) == 10 else msisdn
 
