@@ -78,39 +78,39 @@ def send_otp(request):
         if user_rec.exists():
             trans_one = transaction.savepoint()
             user = user_rec[0]
-            # try:
-            # generate and save the otp
-            base32secret3232 = pyotp.random_base32()
-            otp = pyotp.TOTP(base32secret3232, interval=600, digits=5)
-            time_otp = otp.now()
-            user.otp = time_otp
-            user.otp_secret = base32secret3232
-            user.save()
+            try:
+                # generate and save the otp
+                base32secret3232 = pyotp.random_base32()
+                otp = pyotp.TOTP(base32secret3232, interval=600, digits=5)
+                time_otp = otp.now()
+                user.otp = time_otp
+                user.otp_secret = base32secret3232
+                user.save()
 
-            # send the OTP via SMS
-            url = os.getenv('SMS_SERVICE_HOST')
-            api_key = os.getenv('SMS_SERVICE_KEY')
-            destination = ('254' + msisdn[1:]
-                           ) if len(msisdn) == 10 else msisdn
+                # send the OTP via SMS
+                url = os.getenv('SMS_SERVICE_HOST')
+                api_key = os.getenv('SMS_SERVICE_KEY')
+                destination = ('254' + msisdn[1:]
+                               ) if len(msisdn) == 10 else msisdn
 
-            headers = {"api-token": api_key}
-            data = {
-                'destination': destination,
-                'msg': 'Your pSurvey OTP is ' + time_otp,
-                'sender_id': '40149',
-                'gateway': '40149'
-            }
+                headers = {"api-token": api_key}
+                data = {
+                    'destination': destination,
+                    'msg': 'Your pSurvey OTP is ' + time_otp,
+                    'sender_id': '40149',
+                    'gateway': '40149'
+                }
 
-            response = requests.post(url, headers=headers, data=data)
+                response = requests.post(url, headers=headers, data=data)
 
-            if response.status_code != 200:
-                return Res({"success": False, "message": "Error occured when sending the OTP", "Error text": response.text}, status.HTTP_400_BAD_REQUEST)
+                if response.status_code != 200:
+                    return Res({"success": False, "message": "Error occured when sending the OTP", "Error response": response.text}, status.HTTP_400_BAD_REQUEST)
 
-            return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
+                return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
 
-            # except Exception as err:
-            #     transaction.savepoint_rollback(trans_one)
-            #     return Res({'success': False, 'message': str(err)}, status=status.HTTP_400_BAD_REQUEST)
+            except Exception as err:
+                transaction.savepoint_rollback(trans_one)
+                return Res({'success': False, 'message': str(err)}, status=status.HTTP_400_BAD_REQUEST)
         else:
             return Res({'success': False, 'message': 'invalid user email or phone number'}, status=status.HTTP_400_BAD_REQUEST)
 
