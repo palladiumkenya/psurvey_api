@@ -104,7 +104,7 @@ def send_otp(request):
             response = requests.post(url, headers=headers, data=data)
 
             if response.status_code != 200:
-                return Res({"success": False, "message": "Error occured when sending the OTP", "Error response": response.json()}, status.HTTP_400_BAD_REQUEST)
+                return Res({"success": False, "message": "Error occured when sending the OTP", "Error text": response.text}, status.HTTP_400_BAD_REQUEST)
 
             return Res({"success": True, "message": "OTP sent successfully", "otp": time_otp}, status.HTTP_200_OK)
 
